@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Animal Map</title>
+  </head>
+  <body>
+    <h1>Животные</h1>
+    <button onclick="loadAnimals()">Загрузить животных</button>
+    <div id="animals"></div>
+
+    <script>
+      async function loadAnimals() {
+        const response = await fetch("http://localhost:5000/api/animals");
+
+        const animals = await response.json();
+
+        console.log(animals);
+
+        document.getElementById("animals").innerText = JSON.stringify(animals);
+      }
+    </script>
+  </body>
+</html>
