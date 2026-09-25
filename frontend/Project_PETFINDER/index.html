@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Карта мира на MapLibre + OpenFreeMap</title>
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/maplibre-gl@5.2.0/dist/maplibre-gl.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <button id="plus-button" type="button" aria-label="Добавить метку">+</button>
+
+    <!-- Курсор-превью -->
+    <div id="triangle-cursor">
+        <div class="pin">
+            <div class="pin-body">
+                <div class="pin-photo" id="preview-photo" style="display:none"></div>
+                <div class="pin-text" id="preview-okras"></div>
+                <div class="pin-text" id="preview-text"></div>
+            </div>
+            <div class="pin-tip"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания -->
+    <div id="modal-overlay">
+        <div class="modal">
+
+            <label>Прикрепить фото</label>
+            <div class="photo-drop" id="photo-drop">
+                <span class="photo-plus">+</span>
+            </div>
+            <input id="photo-input" type="file" accept="image/*" hidden />
+
+            <label for="okras-input" class="label-left">Окрас (2-3 слова)</label>
+            <input id="okras-input" type="text" autocomplete="off" />
+
+            <label for="time-input" class="label-left">Время</label>
+            <input id="time-input" type="text" inputmode="numeric" maxlength="5" autocomplete="off" />
+
+            <button id="submit-btn" type="button">Поставить</button>
+        </div>
+    </div>
+
+    <!-- Просмотр метки -->
+    <div id="viewer-overlay">
+        <div class="viewer-inner">
+            <img id="viewer-photo" src="" alt="" />
+            <div id="viewer-okras"></div>
+            <div id="viewer-text"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/maplibre-gl@5.2.0/dist/maplibre-gl.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
