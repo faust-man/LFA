@@ -1,0 +1,396 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+}
+
+#map:active {
+    cursor: grabbing;
+}
+
+/* =========================================
+   Круглая кнопка с плюсом
+   ========================================= */
+#plus-button {
+    position: fixed;
+    top: 50%;
+    right: 24px;
+    transform: translateY(-50%);
+
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+
+    background-color: #ffffff;
+    color: #333333;
+    border: 1px solid #d0d0d0;
+    font-size: 32px;
+    font-weight: 300;
+    line-height: 1;
+
+    cursor: pointer;
+    outline: none;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+    transition: background-color 0.15s ease,
+                box-shadow 0.15s ease,
+                transform 0.15s ease,
+                color 0.15s ease;
+
+    z-index: 10;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 3px;
+}
+
+#plus-button:hover {
+    background-color: #f2f2f2;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+#plus-button:active {
+    background-color: #e8e8e8;
+    transform: translateY(-50%) scale(0.95);
+}
+
+#plus-button.active {
+    background-color: #e74c3c;
+    color: #ffffff;
+    border-color: #c0392b;
+    box-shadow: 0 4px 14px rgba(231, 76, 60, 0.4);
+}
+
+/* =========================================
+   Форма метки «пин»
+   ========================================= */
+.pin {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+
+    filter:
+        drop-shadow( 1.5px   0     0 #ffffff)
+        drop-shadow(-1.5px   0     0 #ffffff)
+        drop-shadow( 0       1.5px 0 #ffffff)
+        drop-shadow( 0      -1.5px 0 #ffffff)
+        drop-shadow( 0       3px   3px rgba(0, 0, 0, 0.35));
+}
+
+.pin-body {
+    background: #e74c3c;
+    border-radius: 8px;
+    padding: 5px 6px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+
+    min-width: 30px;
+}
+
+/* Квадратное фото внутри метки */
+.pin-photo {
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #cccccc;
+}
+
+/* Текст метки (и окрас, и время) */
+.pin-text {
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    line-height: 1;
+    padding: 2px 4px;
+    white-space: nowrap;
+}
+
+/* Треугольник — «острие» метки */
+.pin-tip {
+    width: 0;
+    height: 0;
+    border-left:  8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top:  12px solid #e74c3c;
+
+    margin-top: -1px;
+}
+
+/* =========================================
+   Курсор-превью
+   ========================================= */
+#triangle-cursor {
+    position: fixed;
+    display: none;
+
+    pointer-events: none;
+    z-index: 15;
+
+    transform: translate(-50%, -100%);
+}
+
+/* =========================================
+   Поставленная на карте метка
+   ========================================= */
+.map-marker {
+    pointer-events: none;
+    animation: marker-fade-in 0.2s ease-out;
+}
+
+@keyframes marker-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.map-marker .pin {
+    animation: marker-pop 0.2s ease-out;
+    transform-origin: bottom center;
+}
+
+@keyframes marker-pop {
+    from { transform: scale(0.5); }
+    to   { transform: scale(1); }
+}
+
+/* ----- Кликабельность метки ----- */
+.map-marker .pin-body {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+body.placing-mode .map-marker .pin-body {
+    pointer-events: none;
+    cursor: default;
+}
+
+/* =========================================
+   Модальное окно создания
+   ========================================= */
+#modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 100;
+}
+
+#modal-overlay.visible {
+    display: flex;
+}
+
+.modal {
+    background: #d9d9d9;
+    border-radius: 14px;
+    padding: 22px 20px;
+    min-width: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.modal label {
+    color: #000000;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.modal label.label-left {
+    text-align: left;
+}
+
+.modal input[type="text"] {
+    background: #ffffff;
+    color: #000000;
+    font-weight: 400;
+    font-size: 14px;
+    font-family: inherit;
+
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px;
+    outline: none;
+}
+
+/* ----- Кнопка «Прикрепить фото» ----- */
+.photo-drop {
+    width: 80px;
+    height: 80px;
+    background: #4a4a4a;
+    border-radius: 10px;
+    cursor: pointer;
+    align-self: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+
+    transition: background-color 0.15s ease;
+    position: relative;
+}
+
+.photo-drop:hover {
+    background-color: #5c5c5c;
+}
+
+.photo-plus {
+    color: #ffffff;
+    font-size: 36px;
+    font-weight: 300;
+    line-height: 1;
+    padding-bottom: 4px;
+}
+
+.photo-drop.has-photo {
+    background-color: transparent;
+}
+
+.photo-drop.has-photo .photo-plus {
+    display: none;
+}
+
+/* ----- Кнопка «Поставить» ----- */
+#submit-btn {
+    background: #e74c3c;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+
+    font-size: 14px;
+    font-weight: 400;
+    font-family: inherit;
+    cursor: pointer;
+
+    transition: background-color 0.15s ease;
+}
+
+#submit-btn:hover {
+    background: #c0392b;
+}
+
+#submit-btn:active {
+    background: #a93226;
+}
+
+/* =========================================
+   Подсветка незаполненных обязательных полей
+   ========================================= */
+.modal input.input-error {
+    outline: 2px solid #e74c3c;
+    animation: field-shake 0.25s ease;
+}
+
+.photo-drop.drop-error {
+    outline: 2px solid #e74c3c;
+    animation: field-shake 0.25s ease;
+}
+
+@keyframes field-shake {
+    0%   { transform: translateX(0); }
+    25%  { transform: translateX(-4px); }
+    50%  { transform: translateX(4px); }
+    75%  { transform: translateX(-2px); }
+    100% { transform: translateX(0); }
+}
+
+/* =========================================
+   Оверлей просмотра метки
+   ========================================= */
+#viewer-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 200;
+    cursor: pointer;
+}
+
+#viewer-overlay.visible {
+    display: flex;
+}
+
+.viewer-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+
+    max-width: 95vw;
+    max-height: 95vh;
+
+    cursor: default;
+}
+
+#viewer-photo {
+    max-width: 60vw;
+    max-height: 52vh;
+    display: block;
+
+    border-radius: 10px;
+    object-fit: contain;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+
+    transform: scale(1.5);
+    transform-origin: center top;
+
+    margin-bottom: 26vh;
+}
+
+/* Окрас в просмотрщике — чуть меньше времени */
+#viewer-okras {
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    text-align: center;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+#viewer-text {
+    color: #ffffff;
+    font-size: 26px;
+    font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    text-align: center;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
