@@ -1,4 +1,11 @@
 // =========================================================
+// 0. ОПТИМИЗАЦИЯ ЗАГРУЗКИ
+// =========================================================
+
+maplibregl.setWorkerCount(4);
+maplibregl.prewarm();
+
+// =========================================================
 // 1. ИНИЦИАЛИЗАЦИЯ КАРТЫ
 // =========================================================
 const map = new maplibregl.Map({
@@ -10,6 +17,8 @@ const map = new maplibregl.Map({
     maxZoom: 18,
     antialias: true
 });
+
+maplibregl.setMaxParallelImageRequests(24);
 
 // =========================================================
 // 2. НАСТРОЙКА ПЛАВНОСТИ ЗУМА
@@ -31,18 +40,51 @@ map.addControl(
 );
 
 // =========================================================
+// 3.1. БОКОВАЯ ПАНЕЛЬ (гамбургер)
+// =========================================================
+const menuButton = document.getElementById("menu-button");
+const sidebar    = document.getElementById("sidebar");
+
+menuButton.addEventListener("click", () => {
+    sidebar.classList.toggle("open");
+});
+
+// =========================================================
+// 3.2. НАЧАЛЬНЫЙ БАННЕР
+// =========================================================
+const bannerOverlay = document.getElementById("banner-overlay");
+const helpButton    = document.getElementById("help-button");
+
+document.addEventListener("DOMContentLoaded", () => {
+    bannerOverlay.classList.add("visible");
+});
+
+bannerOverlay.addEventListener("click", (e) => {
+    if (e.target === bannerOverlay) {
+        bannerOverlay.classList.remove("visible");
+    }
+});
+
+helpButton.addEventListener("click", () => {
+    bannerOverlay.classList.add("visible");
+});
+
+// =========================================================
 // 4. РЕЖИМ УСТАНОВКИ МЕТОК
 // =========================================================
 
 const plusButton     = document.getElementById("plus-button");
 const triangleCursor = document.getElementById("triangle-cursor");
 const previewPhoto   = document.getElementById("preview-photo");
+const previewAnimal  = document.getElementById("preview-animal");
 const previewOkras   = document.getElementById("preview-okras");
 const previewText    = document.getElementById("preview-text");
 
 const modalOverlay   = document.getElementById("modal-overlay");
+const animalSelect   = document.getElementById("animal-type");
 const okrasInput     = document.getElementById("okras-input");
 const timeInput      = document.getElementById("time-input");
+const editTimeBtn    = document.getElementById("edit-time-btn");
 const submitBtn      = document.getElementById("submit-btn");
 
 const photoDrop      = document.getElementById("photo-drop");
@@ -51,13 +93,15 @@ const photoInput     = document.getElementById("photo-input");
 // Просмотрщик
 const viewerOverlay = document.getElementById("viewer-overlay");
 const viewerPhoto   = document.getElementById("viewer-photo");
+const viewerAnimal  = document.getElementById("viewer-animal");
 const viewerOkras   = document.getElementById("viewer-okras");
 const viewerText    = document.getElementById("viewer-text");
 
-let placingMode  = false;
-let pendingOkras = "";
-let pendingText  = "";
-let pendingPhoto = null;
+let placingMode   = false;
+let pendingAnimal = "Кошка";
+let pendingOkras  = "";
+let pendingText   = "";
+let pendingPhoto  = null;
 
 let lastMouseX = -1000;
 let lastMouseY = -1000;
@@ -65,8 +109,6 @@ let lastMouseY = -1000;
 // ---------------------------------------------------------
 // Вспомогательные функции
 // ---------------------------------------------------------
-
-// Защита от XSS при вставке пользовательского текста
 function escapeHtml(str) {
     return str
         .replace(/&/g, "&amp;")
@@ -76,11 +118,18 @@ function escapeHtml(str) {
         .replace(/'/g, "&#039;");
 }
 
-// Обрезаем окрас до 4 символов + ".."
 function truncateOkras(str) {
     if (!str) return "";
     if (str.length <= 4) return str;
     return str.slice(0, 4) + "..";
+}
+
+// Текущее время в формате ЧЧ:ММ
+function getCurrentTimeString() {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return hh + ":" + mm;
 }
 
 // ---------------------------------------------------------
@@ -104,8 +153,9 @@ function enablePlacingMode() {
     document.body.classList.add("placing-mode");
     map.getCanvas().style.cursor = "none";
 
-    previewOkras.textContent = truncateOkras(pendingOkras);
-    previewText.textContent  = pendingText;
+    previewAnimal.textContent = pendingAnimal;
+    previewOkras.textContent  = truncateOkras(pendingOkras);
+    previewText.textContent   = pendingText;
 
     if (pendingPhoto) {
         previewPhoto.style.backgroundImage = `url(${pendingPhoto})`;
@@ -140,10 +190,14 @@ function openModal() {
     photoDrop.style.backgroundImage = "";
     photoInput.value = "";
 
+    animalSelect.value = "Кошка";
+
     okrasInput.value = "";
     okrasInput.classList.remove("input-error");
 
-    timeInput.value = "";
+    // Автоподстановка текущего времени, поле только для чтения
+    timeInput.value = getCurrentTimeString();
+    timeInput.readOnly = true;
     timeInput.classList.remove("input-error");
 
     modalOverlay.classList.add("visible");
@@ -161,6 +215,16 @@ plusButton.addEventListener("click", () => {
     } else {
         openModal();
     }
+});
+
+// ---------------------------------------------------------
+// Кнопка «изм.» — включает ручной ввод времени
+// ---------------------------------------------------------
+editTimeBtn.addEventListener("click", () => {
+    timeInput.value = "";
+    timeInput.readOnly = false;
+    timeInput.classList.remove("input-error");
+    timeInput.focus();
 });
 
 // ---------------------------------------------------------
@@ -197,8 +261,6 @@ function isValidTime(str) {
 
 // ---------------------------------------------------------
 // Валидация окраса: 1–3 слова.
-// Разделителями считаются пробелы, дефисы, подчёркивания,
-// слэши и неразрывные пробелы (на случай копирования из Word).
 // ---------------------------------------------------------
 function isValidOkras(str) {
     const trimmed = str.trim();
@@ -211,14 +273,12 @@ function isValidOkras(str) {
     return words.length >= 1 && words.length <= 3;
 }
 
-// Снимаем подсветку ошибки у окраса при вводе
 okrasInput.addEventListener("input", () => {
     if (isValidOkras(okrasInput.value)) {
         okrasInput.classList.remove("input-error");
     }
 });
 
-// Enter в поле «Окрас» = нажатие на «Поставить»
 okrasInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
         e.preventDefault();
@@ -227,6 +287,9 @@ okrasInput.addEventListener("keydown", (e) => {
 });
 
 timeInput.addEventListener("keydown", (e) => {
+    // Пока поле «только для чтения» — клавиатуру не перехватываем
+    if (timeInput.readOnly) return;
+
     if (e.key === "Enter") {
         e.preventDefault();
         submitBtn.click();
@@ -291,8 +354,9 @@ timeInput.addEventListener("input", () => {
 // Кнопка «Поставить»
 // ---------------------------------------------------------
 submitBtn.addEventListener("click", () => {
-    const okras = okrasInput.value.trim();
-    const text  = timeInput.value.trim();
+    const animal = animalSelect.value;
+    const okras  = okrasInput.value.trim();
+    const text   = timeInput.value.trim();
 
     okrasInput.classList.remove("input-error");
     timeInput.classList.remove("input-error");
@@ -317,13 +381,13 @@ submitBtn.addEventListener("click", () => {
 
     if (hasError) return;
 
-    pendingOkras = okras;
-    pendingText  = text;
+    pendingAnimal = animal;
+    pendingOkras  = okras;
+    pendingText   = text;
     closeModal();
     enablePlacingMode();
 });
 
-// Клик по фону модалки
 modalOverlay.addEventListener("click", (e) => {
     if (e.target === modalOverlay) {
         closeModal();
@@ -333,7 +397,7 @@ modalOverlay.addEventListener("click", (e) => {
 // ---------------------------------------------------------
 // Просмотр метки
 // ---------------------------------------------------------
-function openViewer(photo, okras, text) {
+function openViewer(photo, animal, okras, text) {
     if (photo) {
         viewerPhoto.src = photo;
         viewerPhoto.style.display = "block";
@@ -342,8 +406,9 @@ function openViewer(photo, okras, text) {
         viewerPhoto.style.display = "none";
     }
 
-    viewerOkras.textContent = okras || "";
-    viewerText.textContent  = text  || "";
+    viewerAnimal.textContent = animal || "";
+    viewerOkras.textContent  = okras  || "";
+    viewerText.textContent   = text   || "";
 
     viewerOverlay.classList.add("visible");
 }
@@ -360,8 +425,13 @@ viewerOverlay.addEventListener("click", (e) => {
 });
 
 document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && viewerOverlay.classList.contains("visible")) {
-        closeViewer();
+    if (e.key === "Escape") {
+        if (viewerOverlay.classList.contains("visible")) {
+            closeViewer();
+        }
+        if (bannerOverlay.classList.contains("visible")) {
+            bannerOverlay.classList.remove("visible");
+        }
     }
 });
 
@@ -371,10 +441,10 @@ document.addEventListener("keydown", (e) => {
 map.on("click", (e) => {
     if (!placingMode) return;
 
-    // Фиксируем данные этой метки в замыкании
-    const markerOkras = pendingOkras;
-    const markerText  = pendingText;
-    const markerPhoto = pendingPhoto;
+    const markerAnimal = pendingAnimal;
+    const markerOkras  = pendingOkras;
+    const markerText   = pendingText;
+    const markerPhoto  = pendingPhoto;
 
     const el = document.createElement("div");
     el.className = "map-marker";
@@ -387,6 +457,7 @@ map.on("click", (e) => {
         <div class="pin">
             <div class="pin-body">
                 ${photoHtml}
+                <div class="pin-text">${escapeHtml(markerAnimal)}</div>
                 <div class="pin-text">${escapeHtml(truncateOkras(markerOkras))}</div>
                 <div class="pin-text">${escapeHtml(markerText)}</div>
             </div>
@@ -394,21 +465,21 @@ map.on("click", (e) => {
         </div>
     `;
 
-    // Клик по телу метки — открываем просмотрщик
     const pinBody = el.querySelector(".pin-body");
     pinBody.addEventListener("click", (ev) => {
         if (placingMode) return;
         ev.stopPropagation();
-        openViewer(markerPhoto, markerOkras, markerText);
+        openViewer(markerPhoto, markerAnimal, markerOkras, markerText);
     });
 
     new maplibregl.Marker({ element: el, anchor: "bottom" })
         .setLngLat(e.lngLat)
         .addTo(map);
 
-    pendingOkras = "";
-    pendingText  = "";
-    pendingPhoto = null;
+    pendingAnimal = "Кошка";
+    pendingOkras  = "";
+    pendingText   = "";
+    pendingPhoto  = null;
     disablePlacingMode();
 });
 
