@@ -16,5 +16,4 @@ INSERT INTO animals
     (name, species, latitude, longitude)
 VALUES
     ('Барсик', 'cat', 55.75, 37.61),
-    ('Шарик', 'dog', 55.80, 37.70),
-    ('Мурка', 'cat', 55.76, 37.62);
+    ('Шарик', 'dog', 55.80, 37.70)
