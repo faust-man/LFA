@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Карта мира на MapLibre + OpenFreeMap</title>
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/maplibre-gl@5.2.0/dist/maplibre-gl.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <!-- Кнопка-гамбургер -->
+    <button id="menu-button" type="button" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Кнопка «Потерял животное» -->
+    <button id="lost-button" type="button">Потерял животное</button>
+
+    <!-- Боковая панель -->
+    <aside id="sidebar">
+        <button class="sidebar-link" type="button">Пропавшие животные</button>
+        <button class="sidebar-link" type="button">Замеченные животные</button>
+    </aside>
+
+    <!-- Кнопка «+» с кошачьей головой -->
+    <button id="plus-button" type="button" aria-label="Добавить метку">
+        +
+        <svg class="cat-head" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <polygon points="4,10 2,2 10,6"/>
+            <polygon points="20,10 22,2 14,6"/>
+            <ellipse cx="12" cy="14" rx="9" ry="8"/>
+        </svg>
+    </button>
+
+    <!-- Курсор-превью -->
+    <div id="triangle-cursor">
+        <div class="pin">
+            <div class="pin-body">
+                <div class="pin-photo" id="preview-photo" style="display:none"></div>
+                <div class="pin-text" id="preview-animal"></div>
+                <div class="pin-text" id="preview-okras"></div>
+                <div class="pin-text" id="preview-text"></div>
+            </div>
+            <div class="pin-tip"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания -->
+    <div id="modal-overlay">
+        <div class="modal">
+
+            <label>Прикрепить фото</label>
+            <div class="photo-drop" id="photo-drop">
+                <span class="photo-plus">+</span>
+            </div>
+            <input id="photo-input" type="file" accept="image/*" hidden />
+
+            <label for="animal-type" class="label-left">Тип животного</label>
+            <select id="animal-type">
+                <option value="Кошка">Кошка</option>
+                <option value="Собака">Собака</option>
+            </select>
+
+            <label for="okras-input" class="label-left">Окрас (2-3 слова)</label>
+            <input id="okras-input" type="text" autocomplete="off" />
+
+            <label for="time-input" class="label-left">Время</label>
+            <div class="time-row">
+                <input id="time-input" type="text" inputmode="numeric" maxlength="5" autocomplete="off" />
+                <button id="edit-time-btn" type="button">изм.</button>
+            </div>
+
+            <button id="submit-btn" type="button">Поставить</button>
+        </div>
+    </div>
+
+    <!-- Просмотр метки -->
+    <div id="viewer-overlay">
+        <div class="viewer-inner">
+            <img id="viewer-photo" src="" alt="" />
+            <div id="viewer-animal"></div>
+            <div id="viewer-okras"></div>
+            <div id="viewer-text"></div>
+        </div>
+    </div>
+
+    <!-- Начальный баннер -->
+    <div id="banner-overlay">
+        <div class="banner">
+            <div class="banner-title">Функционал кнопок</div>
+
+            <!-- Строка 1 -->
+            <div class="banner-row">
+                <span class="banner-text">Если нашли явно потерявшееся животное</span>
+                <span class="banner-arrow">→</span>
+                <button class="banner-plus" type="button" aria-label="Кнопка плюс (демо)">
+                    +
+                    <svg class="cat-head" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <polygon points="4,10 2,2 10,6"/>
+                        <polygon points="20,10 22,2 14,6"/>
+                        <ellipse cx="12" cy="14" rx="9" ry="8"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Строка 2 -->
+            <div class="banner-row">
+                <button class="banner-lost" type="button">Потерял животное</button>
+                <span class="banner-arrow">←</span>
+                <span class="banner-text">Анкета для поиска вашего пропавшего питомца</span>
+            </div>
+
+            <!-- Строка 3 -->
+            <div class="banner-row">
+                <span class="banner-text">Меню с потерянными/замеченными животными</span>
+                <span class="banner-arrow">→</span>
+                <button class="banner-menu" type="button" aria-label="Меню (демо)">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопка открытия баннера -->
+    <button id="help-button" type="button">
+        <span class="help-short">?</span>
+        <span class="help-long">Функционал кнопок</span>
+    </button>
+
+    <script src="https://unpkg.com/maplibre-gl@5.2.0/dist/maplibre-gl.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
