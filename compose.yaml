@@ -2,50 +2,80 @@ services:
   database:
     image: postgres:17-alpine
     restart: unless-stopped
+
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-animals_db}
       POSTGRES_USER: ${POSTGRES_USER:-animal_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-animal_password}
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
+
     networks:
       - animal-net
 
   backend:
     build: ./backend
     restart: unless-stopped
+
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-animal_user}:${POSTGRES_PASSWORD:-animal_password}@database:5432/${POSTGRES_DB:-animals_db}
+
     depends_on:
       database:
         condition: service_healthy
+
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')",
+        ]
       interval: 5s
       timeout: 3s
       retries: 10
+
     expose:
       - "5000"
+
+    networks:
+      - animal-net
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+
+    expose:
+      - "80"
+
     networks:
       - animal-net
 
   nginx:
     image: nginx:alpine
     restart: unless-stopped
+
     ports:
       - "8080:80"
+
     volumes:
-      - ./frontend:/usr/share/nginx/html:ro
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
     depends_on:
+      frontend:
+        condition: service_started
       backend:
         condition: service_healthy
+
     networks:
       - animal-net
 
