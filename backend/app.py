@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 import psycopg
 from flask import Flask, jsonify, request
@@ -25,9 +26,11 @@ def query_all(sql, params=()):
 def animal_json(row):
     if row is None:
         return None
+
     animal = dict(row)
-    if animal.get("created_at"):
-        animal["created_at"] = animal["created_at"].isoformat()
+    for key, value in animal.items():
+        if isinstance(value, datetime):
+            animal[key] = value.isoformat()
     return animal
 
 
@@ -51,8 +54,8 @@ def create_animal():
     if not isinstance(data, dict):
         return jsonify({"error": "Invalid JSON"}), 400
 
-    required = ("name", "species", "latitude", "longitude")
-    if any(field not in data for field in required):
+    required = ("species", "latitude", "longitude")
+    if any(data.get(field) in (None, "") for field in required):
         return jsonify({"error": "Missing fields"}), 400
 
     try:
@@ -66,11 +69,20 @@ def create_animal():
 
     row = query_one(
         """
-        INSERT INTO animals (name, species, latitude, longitude)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO animals
+            (name, species, color, observed_time, latitude, longitude, photo_data)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         RETURNING *
         """,
-        (data["name"], data["species"], latitude, longitude),
+        (
+            data.get("name") or "Без имени",
+            data["species"],
+            data.get("color") or "",
+            data.get("observed_time") or "",
+            latitude,
+            longitude,
+            data.get("photo_data"),
+        ),
     )
     return jsonify(animal_json(row)), 201
 
@@ -81,26 +93,22 @@ def update_animal(animal_id):
     if not isinstance(data, dict):
         return jsonify({"error": "Invalid JSON"}), 400
 
-    allowed = {"name", "species", "latitude", "longitude"}
+    allowed = {"name", "species", "color", "observed_time", "latitude", "longitude", "photo_data"}
     fields = {key: value for key, value in data.items() if key in allowed}
     if not fields:
         return jsonify({"error": "Nothing to update"}), 400
 
-    if "latitude" in fields:
-        try:
-            fields["latitude"] = float(fields["latitude"])
-        except (TypeError, ValueError):
-            return jsonify({"error": "Latitude must be a number"}), 400
-        if not -90 <= fields["latitude"] <= 90:
-            return jsonify({"error": "Latitude is out of range"}), 400
-
-    if "longitude" in fields:
-        try:
-            fields["longitude"] = float(fields["longitude"])
-        except (TypeError, ValueError):
-            return jsonify({"error": "Longitude must be a number"}), 400
-        if not -180 <= fields["longitude"] <= 180:
-            return jsonify({"error": "Longitude is out of range"}), 400
+    for field, minimum, maximum in (
+        ("latitude", -90, 90),
+        ("longitude", -180, 180),
+    ):
+        if field in fields:
+            try:
+                fields[field] = float(fields[field])
+            except (TypeError, ValueError):
+                return jsonify({"error": f"{field} must be a number"}), 400
+            if not minimum <= fields[field] <= maximum:
+                return jsonify({"error": f"{field} is out of range"}), 400
 
     set_sql = ", ".join(f"{name} = %s" for name in fields)
     params = tuple(fields.values()) + (animal_id,)

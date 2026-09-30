@@ -1,24 +1,36 @@
-# Test backend + PostgreSQL
+# Animal Map — Flask + PostgreSQL + Nginx
 
-Запуск:
+## Быстрый запуск
+
+Нужны Docker и Docker Compose.
 
 ```bash
 docker compose up -d --build
 ```
 
-Проверка:
+Открыть сайт:
 
-```bash
-curl http://localhost:5000/health
-curl http://localhost:5000/api/animals
+```text
+http://localhost:8080
 ```
 
-Добавить животное:
+Проверить всю цепочку Nginx -> Flask -> PostgreSQL:
 
 ```bash
-curl -X POST http://localhost:5000/api/animals \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Рекс","species":"dog","latitude":55.73,"longitude":37.60}'
+curl http://localhost:8080/health
+curl http://localhost:8080/api/animals
+```
+
+Посмотреть контейнеры:
+
+```bash
+docker compose ps
+```
+
+Посмотреть логи:
+
+```bash
+docker compose logs -f
 ```
 
 Остановить:
@@ -27,8 +39,51 @@ curl -X POST http://localhost:5000/api/animals \
 docker compose down
 ```
 
-Удалить контейнеры вместе с данными PostgreSQL:
+Удалить также volume PostgreSQL и начать с чистой БД:
 
 ```bash
 docker compose down -v
 ```
+
+## Архитектура
+
+```text
+Browser
+   |
+   | http://localhost:8080
+   v
+Nginx :80
+   |-- /, *.js, *.css -> static frontend
+   |
+   `-- /api/*, /health -> backend:5000
+                              |
+                              v
+                         PostgreSQL :5432
+```
+
+Снаружи опубликован только порт Nginx (`8080`). Backend и PostgreSQL доступны только внутри Docker network `animal-net`.
+
+## Переменные PostgreSQL
+
+Compose содержит безопасные для локальной разработки значения по умолчанию, поэтому `.env` для первого запуска не обязателен.
+
+Чтобы задать свои значения:
+
+```bash
+cp .env.example .env
+```
+
+и отредактировать `.env`.
+
+## Важное замечание о старой БД
+
+`docker-entrypoint-initdb.d/init.sql` автоматически выполняется только при создании пустого volume PostgreSQL.
+
+Если до этой версии проекта уже существовал старый `postgres_data`, проще всего для учебного проекта пересоздать БД:
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```
+
+Это удаляет старые данные.

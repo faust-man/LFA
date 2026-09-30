@@ -436,15 +436,13 @@ document.addEventListener("keydown", (e) => {
 });
 
 // ---------------------------------------------------------
-// Клик по карте — ставим метку
+// Backend API: создаём и загружаем метки через Nginx
 // ---------------------------------------------------------
-map.on("click", (e) => {
-    if (!placingMode) return;
-
-    const markerAnimal = pendingAnimal;
-    const markerOkras  = pendingOkras;
-    const markerText   = pendingText;
-    const markerPhoto  = pendingPhoto;
+function addAnimalMarker(animal) {
+    const markerAnimal = animal.species || "";
+    const markerOkras = animal.color || "";
+    const markerText = animal.observed_time || "";
+    const markerPhoto = animal.photo_data || null;
 
     const el = document.createElement("div");
     el.className = "map-marker";
@@ -473,14 +471,65 @@ map.on("click", (e) => {
     });
 
     new maplibregl.Marker({ element: el, anchor: "bottom" })
-        .setLngLat(e.lngLat)
+        .setLngLat([animal.longitude, animal.latitude])
         .addTo(map);
+}
 
-    pendingAnimal = "Кошка";
-    pendingOkras  = "";
-    pendingText   = "";
-    pendingPhoto  = null;
-    disablePlacingMode();
+async function loadAnimals() {
+    const response = await fetch("/api/animals");
+    if (!response.ok) {
+        throw new Error(`GET /api/animals: ${response.status}`);
+    }
+
+    const animals = await response.json();
+    animals.forEach(addAnimalMarker);
+}
+
+async function saveAnimal(animal) {
+    const response = await fetch("/api/animals", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(animal)
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || `POST /api/animals: ${response.status}`);
+    }
+
+    return response.json();
+}
+
+// ---------------------------------------------------------
+// Клик по карте — сохраняем метку в PostgreSQL через Flask
+// ---------------------------------------------------------
+map.on("click", async (e) => {
+    if (!placingMode) return;
+
+    const animal = {
+        species: pendingAnimal,
+        color: pendingOkras,
+        observed_time: pendingText,
+        photo_data: pendingPhoto,
+        latitude: e.lngLat.lat,
+        longitude: e.lngLat.lng
+    };
+
+    try {
+        const savedAnimal = await saveAnimal(animal);
+        addAnimalMarker(savedAnimal);
+
+        pendingAnimal = "Кошка";
+        pendingOkras = "";
+        pendingText = "";
+        pendingPhoto = null;
+        disablePlacingMode();
+    } catch (error) {
+        console.error("Не удалось сохранить животное:", error);
+        alert("Не удалось сохранить метку. Проверь backend и PostgreSQL.");
+    }
 });
 
 map.dragRotate.disable();
@@ -492,6 +541,13 @@ map.on("error", (e) => {
     console.error("Ошибка карты:", e.error);
 });
 
-map.on("load", () => {
+map.on("load", async () => {
     console.log("✅ Карта успешно загружена!");
+
+    try {
+        await loadAnimals();
+        console.log("✅ Метки загружены из PostgreSQL");
+    } catch (error) {
+        console.error("Не удалось загрузить метки:", error);
+    }
 });
