@@ -4,6 +4,11 @@
     box-sizing: border-box;
 }
 
+:root {
+    /* Масштаб метки — управляется из JS в зависимости от зума */
+    --marker-scale: 1;
+}
+
 html,
 body {
     width: 100%;
@@ -262,6 +267,8 @@ body {
     gap: 4px;
 
     min-width: 30px;
+
+    position: relative;
 }
 
 .pin-photo {
@@ -296,6 +303,37 @@ body {
 }
 
 /* =========================================
+   Значок «приютил» в углу метки
+   ========================================= */
+.pin-body .pin-helped-icon {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #ffffff;
+    border-radius: 50%;
+
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+
+    z-index: 3;
+    pointer-events: none;
+}
+
+.pin-body .pin-helped-icon svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+    fill: #e74c3c;
+}
+
+/* =========================================
    Курсор-превью
    ========================================= */
 #triangle-cursor {
@@ -322,13 +360,9 @@ body {
 }
 
 .map-marker .pin {
-    animation: marker-pop 0.2s ease-out;
+    /* Масштаб метки зависит от зума — см. script.js */
+    transform: scale(var(--marker-scale, 1));
     transform-origin: bottom center;
-}
-
-@keyframes marker-pop {
-    from { transform: scale(0.5); }
-    to   { transform: scale(1); }
 }
 
 .map-marker .pin-body {
@@ -342,9 +376,10 @@ body.placing-mode .map-marker .pin-body {
 }
 
 /* =========================================
-   Модальное окно создания
+   Модальные окна
    ========================================= */
-#modal-overlay {
+#modal-overlay,
+#lost-modal-overlay {
     position: fixed;
     inset: 0;
     display: none;
@@ -355,7 +390,8 @@ body.placing-mode .map-marker .pin-body {
     z-index: 100;
 }
 
-#modal-overlay.visible {
+#modal-overlay.visible,
+#lost-modal-overlay.visible {
     display: flex;
 }
 
@@ -364,12 +400,29 @@ body.placing-mode .map-marker .pin-body {
     border-radius: 14px;
     padding: 22px 20px;
     min-width: 240px;
+    max-width: 420px;
     display: flex;
     flex-direction: column;
     gap: 10px;
 
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    max-height: 90vh;
+    overflow-y: auto;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.modal::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+#lost-modal-overlay .modal {
+    min-width: 340px;
 }
 
 .modal label {
@@ -384,6 +437,7 @@ body.placing-mode .map-marker .pin-body {
 }
 
 .modal input[type="text"],
+.modal textarea,
 .modal select {
     background: #ffffff;
     color: #000000;
@@ -395,6 +449,12 @@ body.placing-mode .map-marker .pin-body {
     border-radius: 8px;
     padding: 10px 12px;
     outline: none;
+}
+
+.modal textarea {
+    resize: none;
+    line-height: 1.4;
+    min-height: 50px;
 }
 
 .modal select {
@@ -449,15 +509,19 @@ body.placing-mode .map-marker .pin-body {
     display: none;
 }
 
+/* =========================================
+   Кнопки в модалках
+   ========================================= */
 #submit-btn {
     background: #e74c3c;
     color: #ffffff;
     border: none;
     border-radius: 8px;
-    padding: 10px 16px;
+    padding: 12px 18px;
+    margin-bottom: 4px;
 
-    font-size: 14px;
-    font-weight: 400;
+    font-size: 16px;
+    font-weight: 500;
     font-family: inherit;
     cursor: pointer;
 
@@ -472,8 +536,186 @@ body.placing-mode .map-marker .pin-body {
     background: #a93226;
 }
 
+#lost-submit-btn {
+    background: #e74c3c;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+
+    font-size: 16px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+
+    transition: background-color 0.15s ease;
+}
+
+#lost-submit-btn:hover {
+    background: #c0392b;
+}
+
+#lost-submit-btn:active {
+    background: #a93226;
+}
+
 /* =========================================
-   Строка «Время» с кнопкой «изм.»
+   Кнопка «Рассказать больше»
+   ========================================= */
+#more-btn {
+    background: none;
+    border: none;
+    padding: 0;
+
+    color: #000000;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: inherit;
+
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+
+    cursor: pointer;
+    text-align: center;
+    align-self: center;
+
+    transition: color 0.15s ease;
+}
+
+#more-btn:hover {
+    color: #e74c3c;
+}
+
+/* =========================================
+   Дополнительные поля
+   ========================================= */
+#extra-fields {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#extra-fields.visible {
+    display: flex;
+}
+
+/* =========================================
+   Ползунок Нет/Да
+   ========================================= */
+.toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.toggle-label {
+    color: #000000;
+    font-size: 14px;
+    font-weight: 500;
+    user-select: none;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch .slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #b0b0b0;
+    border-radius: 26px;
+    transition: background-color 0.2s ease;
+}
+
+.switch .slider::before {
+    content: "";
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    top: 3px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.switch input:checked + .slider {
+    background-color: #e74c3c;
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(24px);
+}
+
+/* =========================================
+   Блок «ready-extra»
+   ========================================= */
+#ready-extra {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#ready-extra.visible {
+    display: flex;
+}
+
+/* =========================================
+   Подсказки адреса
+   ========================================= */
+#address-suggestions {
+    display: none;
+
+    position: fixed;
+
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    z-index: 500;
+
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+#address-suggestions.visible {
+    display: block;
+}
+
+.address-suggestion {
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #000000;
+    cursor: pointer;
+    border-bottom: 1px solid #eeeeee;
+    transition: background-color 0.15s ease;
+}
+
+.address-suggestion:last-child {
+    border-bottom: none;
+}
+
+.address-suggestion:hover {
+    background-color: #f2f2f2;
+}
+
+/* =========================================
+   Строка «Время» / «Дата» с кнопкой «изм.»
    ========================================= */
 .time-row {
     display: flex;
@@ -482,12 +724,22 @@ body.placing-mode .map-marker .pin-body {
     gap: 10px;
 }
 
-.time-row #time-input {
+.time-row #time-input,
+.time-row #lost-time {
     width: 80px;
     flex-shrink: 0;
 }
 
-#edit-time-btn {
+.time-row #date-input,
+.time-row #lost-date {
+    width: 130px;
+    flex-shrink: 0;
+}
+
+#edit-time-btn,
+#edit-date-btn,
+#lost-edit-time-btn,
+#lost-edit-date-btn {
     background: none;
     border: none;
     padding: 0;
@@ -508,14 +760,18 @@ body.placing-mode .map-marker .pin-body {
     transition: color 0.15s ease;
 }
 
-#edit-time-btn:hover {
+#edit-time-btn:hover,
+#edit-date-btn:hover,
+#lost-edit-time-btn:hover,
+#lost-edit-date-btn:hover {
     color: #e74c3c;
 }
 
 /* =========================================
    Подсветка незаполненных обязательных полей
    ========================================= */
-.modal input.input-error {
+.modal input.input-error,
+.modal textarea.input-error {
     outline: 2px solid #e74c3c;
     animation: field-shake 0.25s ease;
 }
@@ -556,27 +812,37 @@ body.placing-mode .map-marker .pin-body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
 
     max-width: 95vw;
     max-height: 95vh;
 
+    padding: 20px;
     cursor: default;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    overflow-y: auto;
+}
+
+.viewer-inner::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 #viewer-photo {
-    max-width: 60vw;
-    max-height: 52vh;
+    max-width: 90vw;
+    max-height: 65vh;
+    width: auto;
+    height: auto;
     display: block;
 
     border-radius: 10px;
     object-fit: contain;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-
-    transform: scale(1.5);
-    transform-origin: center top;
-
-    margin-bottom: 26vh;
+    flex-shrink: 0;
 }
 
 #viewer-animal {
@@ -587,6 +853,7 @@ body.placing-mode .map-marker .pin-body {
 
     text-align: center;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    flex-shrink: 0;
 }
 
 #viewer-okras {
@@ -597,16 +864,61 @@ body.placing-mode .map-marker .pin-body {
 
     text-align: center;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    flex-shrink: 0;
 }
 
 #viewer-text {
     color: #ffffff;
-    font-size: 26px;
+    font-size: 22px;
     font-weight: 600;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
     text-align: center;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    flex-shrink: 0;
+
+    white-space: pre;
+}
+
+/* =========================================
+   Доп. данные в просмотрщике
+   ========================================= */
+#viewer-extra {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 600px;
+    flex-shrink: 0;
+}
+
+.viewer-extra-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+
+.viewer-extra-label {
+    color: #ffd7d1;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.viewer-extra-value {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* =========================================
@@ -765,6 +1077,62 @@ body.placing-mode .map-marker .pin-body {
     height: 2px;
     background-color: #333333;
     border-radius: 1px;
+}
+
+/* Увеличенный значок сердечка в баннере */
+.banner-heart-icon {
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #ffffff;
+    border-radius: 50%;
+
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+
+    flex-shrink: 0;
+}
+
+.banner-heart-icon svg {
+    width: 30px;
+    height: 30px;
+    display: block;
+    fill: #e74c3c;
+}
+
+/* Текст в строке с сердечком — по центру */
+.banner-heart-icon ~ .banner-text {
+    flex: 1;
+    text-align: center;
+}
+
+#banner-close-btn {
+    display: block;
+    margin: 24px auto 0;
+
+    background: #e74c3c;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+
+    font-size: 16px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+
+    transition: background-color 0.15s ease;
+}
+
+#banner-close-btn:hover {
+    background: #c0392b;
+}
+
+#banner-close-btn:active {
+    background: #a93226;
 }
 
 /* =========================================

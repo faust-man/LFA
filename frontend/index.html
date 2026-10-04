@@ -48,13 +48,14 @@
                 <div class="pin-photo" id="preview-photo" style="display:none"></div>
                 <div class="pin-text" id="preview-animal"></div>
                 <div class="pin-text" id="preview-okras"></div>
+                <div class="pin-text" id="preview-date"></div>
                 <div class="pin-text" id="preview-text"></div>
             </div>
             <div class="pin-tip"></div>
         </div>
     </div>
 
-    <!-- Модальное окно создания -->
+    <!-- Модальное окно создания метки -->
     <div id="modal-overlay">
         <div class="modal">
 
@@ -79,7 +80,97 @@
                 <button id="edit-time-btn" type="button">изм.</button>
             </div>
 
-            <button id="submit-btn" type="button">Поставить</button>
+            <label for="date-input" class="label-left">Дата</label>
+            <div class="time-row">
+                <input id="date-input" type="text" inputmode="numeric" maxlength="10" autocomplete="off" />
+                <button id="edit-date-btn" type="button">изм.</button>
+            </div>
+
+            <!-- Дополнительные поля (раскрываются по «Рассказать больше») -->
+            <div id="extra-fields">
+
+                <label for="behavior-input" class="label-left">Поведение животного</label>
+                <textarea id="behavior-input" rows="2" maxlength="100"></textarea>
+
+                <label for="state-input" class="label-left">Состояние животного</label>
+                <textarea id="state-input" rows="2" maxlength="100"></textarea>
+
+                <label>Готовы ли вы подождать хозяина и приютить животное?</label>
+
+                <div class="toggle-row">
+                    <span class="toggle-label">Нет</span>
+                    <label class="switch">
+                        <input type="checkbox" id="ready-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label">Да</span>
+                </div>
+
+                <div id="ready-extra">
+                    <label for="extra-contact-input" class="label-left">Ном. телефона/Vk/Tg</label>
+                    <input id="extra-contact-input" type="text" autocomplete="off" />
+
+                    <label for="address-input" class="label-left">Адрес, где будет находиться животное</label>
+                    <input id="address-input" type="text" autocomplete="off" />
+                </div>
+            </div>
+
+            <!-- Кнопка «Поставить метку» — над «Рассказать больше» -->
+            <button id="submit-btn" type="button">Поставить метку</button>
+
+            <!-- Кнопка «Рассказать больше» — самая нижняя -->
+            <button id="more-btn" type="button">Рассказать больше</button>
+
+        </div>
+    </div>
+
+    <!-- Dropdown с подсказками адреса -->
+    <div id="address-suggestions"></div>
+
+    <!-- Модальное окно «Потерял животное» -->
+    <div id="lost-modal-overlay">
+        <div class="modal">
+
+            <label>Прикрепить фото</label>
+            <div class="photo-drop" id="lost-photo-drop">
+                <span class="photo-plus">+</span>
+            </div>
+            <input id="lost-photo-input" type="file" accept="image/*" hidden />
+
+            <label for="lost-nickname" class="label-left">Кличка животного</label>
+            <input id="lost-nickname" type="text" autocomplete="off" />
+
+            <label for="lost-character" class="label-left">Характер/Реакция на незнакомцев</label>
+            <textarea id="lost-character" rows="3"></textarea>
+
+            <label for="lost-contact" class="label-left">Номер телефона/Vk/Tg</label>
+            <input id="lost-contact" type="text" autocomplete="off" />
+
+            <label for="lost-animal-type" class="label-left">Тип животного</label>
+            <select id="lost-animal-type">
+                <option value="Кошка">Кошка</option>
+                <option value="Собака">Собака</option>
+            </select>
+
+            <label for="lost-okras" class="label-left">Окрас (2-3 слова)</label>
+            <input id="lost-okras" type="text" autocomplete="off" />
+
+            <label for="lost-time" class="label-left">Примерное время потери</label>
+            <div class="time-row">
+                <input id="lost-time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" />
+                <button id="lost-edit-time-btn" type="button">изм.</button>
+            </div>
+
+            <label for="lost-date" class="label-left">Дата потери</label>
+            <div class="time-row">
+                <input id="lost-date" type="text" inputmode="numeric" maxlength="10" autocomplete="off" />
+                <button id="lost-edit-date-btn" type="button">изм.</button>
+            </div>
+
+            <label for="lost-address" class="label-left">Адрес потери</label>
+            <input id="lost-address" type="text" autocomplete="off" />
+
+            <button id="lost-submit-btn" type="button">Разместить объявление</button>
         </div>
     </div>
 
@@ -90,15 +181,15 @@
             <div id="viewer-animal"></div>
             <div id="viewer-okras"></div>
             <div id="viewer-text"></div>
+            <div id="viewer-extra"></div>
         </div>
     </div>
 
-    <!-- Начальный баннер -->
+        <!-- Начальный баннер -->
     <div id="banner-overlay">
         <div class="banner">
             <div class="banner-title">Функционал кнопок</div>
 
-            <!-- Строка 1 -->
             <div class="banner-row">
                 <span class="banner-text">Если нашли явно потерявшееся животное</span>
                 <span class="banner-arrow">→</span>
@@ -112,14 +203,12 @@
                 </button>
             </div>
 
-            <!-- Строка 2 -->
             <div class="banner-row">
                 <button class="banner-lost" type="button">Потерял животное</button>
                 <span class="banner-arrow">←</span>
                 <span class="banner-text">Анкета для поиска вашего пропавшего питомца</span>
             </div>
 
-            <!-- Строка 3 -->
             <div class="banner-row">
                 <span class="banner-text">Меню с потерянными/замеченными животными</span>
                 <span class="banner-arrow">→</span>
@@ -129,6 +218,18 @@
                     <span></span>
                 </button>
             </div>
+
+            <div class="banner-row">
+                <span class="banner-heart-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </span>
+                <span class="banner-arrow">←</span>
+                <span class="banner-text">Такой значок у метки означает, что животное временно приютили и оно ждет своего хозяина у другого человека</span>
+            </div>
+
+            <button id="banner-close-btn" type="button">Ясно</button>
         </div>
     </div>
 
