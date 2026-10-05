@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Карта мира на MapLibre + OpenFreeMap</title>
 
     <link
@@ -15,23 +15,98 @@
 
     <div id="map"></div>
 
-    <button id="plus-button" type="button" aria-label="Добавить метку">+</button>
+    <!-- Кнопка-гамбургер -->
+    <button id="menu-button" type="button" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Кнопка «Потерял животное» -->
+    <button id="lost-button" type="button">Потерял животное</button>
+
+    <!-- Основное боковое меню -->
+    <aside id="sidebar">
+        <button class="sidebar-link" id="sidebar-lost-link" type="button">Пропавшие животные</button>
+        <button class="sidebar-link" id="sidebar-seen-link" type="button">Замеченные животные</button>
+    </aside>
+
+    <!-- Панель «Замеченные животные» -->
+    <aside id="sidebar-animals">
+        <div class="sidebar-animals-header">
+            <button id="sidebar-animals-back" type="button" aria-label="Назад">←</button>
+            <span class="sidebar-animals-title">Замеченные животные</span>
+            <button id="filter-toggle-btn" type="button" aria-label="Фильтры">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect x="6"  y="3" width="3" height="18" fill="#555555" rx="0.5"/>
+                    <rect x="15" y="3" width="3" height="18" fill="#555555" rx="0.5"/>
+                    <circle cx="7.5"  cy="5.5"  r="2.5" fill="#555555"/>
+                    <circle cx="16.5" cy="18.5" r="2.5" fill="#555555"/>
+                </svg>
+            </button>
+        </div>
+        <div id="sidebar-animals-list"></div>
+    </aside>
+
+    <!-- Панель «Пропавшие животные» -->
+    <aside id="sidebar-lost-animals">
+        <div class="sidebar-animals-header">
+            <button id="sidebar-lost-animals-back" type="button" aria-label="Назад">←</button>
+            <span class="sidebar-animals-title">Пропавшие животные</span>
+            <button id="lost-filter-toggle-btn" type="button" aria-label="Фильтры">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect x="6"  y="3" width="3" height="18" fill="#555555" rx="0.5"/>
+                    <rect x="15" y="3" width="3" height="18" fill="#555555" rx="0.5"/>
+                    <circle cx="7.5"  cy="5.5"  r="2.5" fill="#555555"/>
+                    <circle cx="16.5" cy="18.5" r="2.5" fill="#555555"/>
+                </svg>
+            </button>
+        </div>
+        <div id="sidebar-lost-animals-list"></div>
+    </aside>
+
+    <!-- Окно фильтров -->
+    <aside id="sidebar-filters">
+        <button id="filter-close-btn" type="button" aria-label="Закрыть">×</button>
+
+        <div class="sidebar-filters-title">Фильтры</div>
+
+        <label for="filter-address" id="filter-address-label" class="sidebar-filters-label">Адрес поиска (2 км радиус)</label>
+        <input id="filter-address" type="text" autocomplete="off" />
+
+        <button id="filter-reset-btn" type="button">Сбросить</button>
+        <button id="filter-apply-btn" type="button">Применить</button>
+    </aside>
+
+    <!-- Кнопка «+» с кошачьей головой -->
+    <button id="plus-button" type="button" aria-label="Добавить метку">
+        +
+        <svg class="cat-head" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <polygon points="4,10 2,2 10,6"/>
+            <polygon points="20,10 22,2 14,6"/>
+            <ellipse cx="12" cy="14" rx="9" ry="8"/>
+        </svg>
+    </button>
 
     <!-- Курсор-превью -->
     <div id="triangle-cursor">
         <div class="pin">
             <div class="pin-body">
                 <div class="pin-photo" id="preview-photo" style="display:none"></div>
+                <div class="pin-text" id="preview-animal"></div>
                 <div class="pin-text" id="preview-okras"></div>
+                <div class="pin-text" id="preview-date"></div>
                 <div class="pin-text" id="preview-text"></div>
             </div>
             <div class="pin-tip"></div>
         </div>
     </div>
 
-    <!-- Модальное окно создания -->
+    <!-- Модальное окно создания метки -->
     <div id="modal-overlay">
         <div class="modal">
+
+            <button class="modal-close-btn" type="button" aria-label="Закрыть">×</button>
 
             <label>Прикрепить фото</label>
             <div class="photo-drop" id="photo-drop">
@@ -39,24 +114,216 @@
             </div>
             <input id="photo-input" type="file" accept="image/*" hidden />
 
+            <label for="animal-type" class="label-left">Тип животного</label>
+            <select id="animal-type">
+                <option value="Кошка">Кошка</option>
+                <option value="Собака">Собака</option>
+            </select>
+
             <label for="okras-input" class="label-left">Окрас (2-3 слова)</label>
             <input id="okras-input" type="text" autocomplete="off" />
 
             <label for="time-input" class="label-left">Время</label>
-            <input id="time-input" type="text" inputmode="numeric" maxlength="5" autocomplete="off" />
+            <div class="time-row">
+                <input id="time-input" type="text" inputmode="numeric" maxlength="5" autocomplete="off" />
+                <button id="edit-time-btn" type="button">изм.</button>
+            </div>
 
-            <button id="submit-btn" type="button">Поставить</button>
+            <label for="date-input" class="label-left">Дата</label>
+            <div class="time-row">
+                <input id="date-input" type="text" inputmode="numeric" maxlength="10" autocomplete="off" />
+                <button id="edit-date-btn" type="button">изм.</button>
+            </div>
+
+            <div id="extra-fields">
+
+                <label for="behavior-input" class="label-left">Поведение животного</label>
+                <textarea id="behavior-input" rows="2" maxlength="100"></textarea>
+
+                <label for="state-input" class="label-left">Состояние животного</label>
+                <textarea id="state-input" rows="2" maxlength="100"></textarea>
+
+                <label>Готовы ли вы подождать хозяина и приютить животное?</label>
+
+                <div class="toggle-row">
+                    <span class="toggle-label">Нет</span>
+                    <label class="switch">
+                        <input type="checkbox" id="ready-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label">Да</span>
+                </div>
+
+                <div id="ready-extra">
+                    <label for="extra-contact-input" class="label-left">Ном. телефона/Vk/Tg</label>
+                    <input id="extra-contact-input" type="text" autocomplete="off" />
+
+                    <label for="address-input" class="label-left">Адрес, где будет находиться животное</label>
+                    <input id="address-input" type="text" autocomplete="off" />
+                </div>
+            </div>
+
+            <button id="submit-btn" type="button">Поставить метку</button>
+            <button id="more-btn" type="button">Рассказать больше</button>
+
+        </div>
+    </div>
+
+    <!-- Dropdown с подсказками адреса -->
+    <div id="address-suggestions"></div>
+
+    <!-- Модальное окно «Потерял животное» -->
+    <div id="lost-modal-overlay">
+        <div class="modal">
+
+            <button class="modal-close-btn" type="button" aria-label="Закрыть">×</button>
+
+            <label>Прикрепить фото</label>
+            <div class="photo-drop" id="lost-photo-drop">
+                <span class="photo-plus">+</span>
+            </div>
+            <input id="lost-photo-input" type="file" accept="image/*" hidden />
+
+            <label for="lost-nickname" class="label-left">Кличка животного</label>
+            <input id="lost-nickname" type="text" autocomplete="off" />
+
+            <label for="lost-character" class="label-left">Характер/Реакция на незнакомцев</label>
+            <textarea id="lost-character" rows="3"></textarea>
+
+            <label for="lost-contact" class="label-left">Номер телефона/Vk/Tg</label>
+            <input id="lost-contact" type="text" autocomplete="off" />
+
+            <label for="lost-animal-type" class="label-left">Тип животного</label>
+            <select id="lost-animal-type">
+                <option value="Кошка">Кошка</option>
+                <option value="Собака">Собака</option>
+            </select>
+
+            <label for="lost-okras" class="label-left">Окрас (2-3 слова)</label>
+            <input id="lost-okras" type="text" autocomplete="off" />
+
+            <label for="lost-time" class="label-left">Примерное время потери</label>
+            <div class="time-row">
+                <input id="lost-time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" />
+                <button id="lost-edit-time-btn" type="button">изм.</button>
+            </div>
+
+            <label for="lost-date" class="label-left">Дата потери</label>
+            <div class="time-row">
+                <input id="lost-date" type="text" inputmode="numeric" maxlength="10" autocomplete="off" />
+                <button id="lost-edit-date-btn" type="button">изм.</button>
+            </div>
+
+            <label for="lost-address" class="label-left">Адрес потери</label>
+            <input id="lost-address" type="text" autocomplete="off" />
+
+            <button id="lost-submit-btn" type="button">Разместить объявление</button>
         </div>
     </div>
 
     <!-- Просмотр метки -->
     <div id="viewer-overlay">
         <div class="viewer-inner">
+            <button class="viewer-close-btn" type="button" aria-label="Закрыть">×</button>
             <img id="viewer-photo" src="" alt="" />
+            <div id="viewer-animal"></div>
             <div id="viewer-okras"></div>
             <div id="viewer-text"></div>
+            <div id="viewer-extra"></div>
         </div>
     </div>
+
+    <!-- Мобильный режим постановки метки -->
+    <div id="mobile-place-overlay">
+        <div class="mobile-place-pin">
+            <div class="pin">
+                <div class="pin-body">
+                    <div class="pin-photo" id="mobile-preview-photo" style="display:none"></div>
+                    <div class="pin-text" id="mobile-preview-animal"></div>
+                    <div class="pin-text" id="mobile-preview-okras"></div>
+                    <div class="pin-text" id="mobile-preview-date"></div>
+                    <div class="pin-text" id="mobile-preview-text"></div>
+                </div>
+                <div class="pin-tip"></div>
+            </div>
+        </div>
+
+        <div class="mobile-place-actions">
+            <button id="mobile-place-cancel" type="button" aria-label="Отмена">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M6 6 L18 18 M6 18 L18 6"
+                          stroke="#ffffff"
+                          stroke-width="3"
+                          stroke-linecap="round"/>
+                </svg>
+            </button>
+
+            <button id="mobile-place-confirm" type="button" aria-label="Поставить">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M4 12 L10 18 L20 6"
+                          stroke="#ffffff"
+                          stroke-width="3"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          fill="none"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Начальный баннер -->
+    <div id="banner-overlay">
+        <div class="banner">
+            <div class="banner-title">Функционал кнопок</div>
+
+            <div class="banner-row">
+                <span class="banner-text">Если нашли явно потерявшееся животное</span>
+                <span class="banner-arrow">→</span>
+                <button class="banner-plus" type="button" aria-label="Кнопка плюс (демо)">
+                    +
+                    <svg class="cat-head" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <polygon points="4,10 2,2 10,6"/>
+                        <polygon points="20,10 22,2 14,6"/>
+                        <ellipse cx="12" cy="14" rx="9" ry="8"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="banner-row">
+                <button class="banner-lost" type="button">Потерял животное</button>
+                <span class="banner-arrow">←</span>
+                <span class="banner-text">Анкета для поиска вашего пропавшего питомца</span>
+            </div>
+
+            <div class="banner-row">
+                <span class="banner-text">Меню с потерянными/замеченными животными</span>
+                <span class="banner-arrow">→</span>
+                <button class="banner-menu" type="button" aria-label="Меню (демо)">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+
+            <div class="banner-row">
+                <span class="banner-heart-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </span>
+                <span class="banner-arrow">←</span>
+                <span class="banner-text">Такой значок у метки означает, что животное временно приютили и оно ждет своего хозяина у другого человека</span>
+            </div>
+
+            <button id="banner-close-btn" type="button">Ясно</button>
+        </div>
+    </div>
+
+    <!-- Кнопка открытия баннера -->
+    <button id="help-button" type="button">
+        <span class="help-short">?</span>
+        <span class="help-long">Функционал кнопок</span>
+    </button>
 
     <script src="https://unpkg.com/maplibre-gl@5.2.0/dist/maplibre-gl.js"></script>
     <script src="script.js"></script>
