@@ -1,13 +1,15 @@
 // =========================================================
-// 0. ОПТИМИЗАЦИЯ ЗАГРУЗКИ
+// 0. АДРЕС БЭКЕНДА
+// =========================================================
+const API_BASE = "http://localhost:5000";
+
+// =========================================================
+// 1. ИНИЦИАЛИЗАЦИЯ КАРТЫ
 // =========================================================
 
 maplibregl.setWorkerCount(4);
 maplibregl.prewarm();
 
-// =========================================================
-// 1. ИНИЦИАЛИЗАЦИЯ КАРТЫ
-// =========================================================
 const map = new maplibregl.Map({
     container: "map",
     style: "https://tiles.openfreemap.org/styles/liberty",
@@ -20,15 +22,9 @@ const map = new maplibregl.Map({
 
 maplibregl.setMaxParallelImageRequests(24);
 
-// =========================================================
-// 2. НАСТРОЙКА ПЛАВНОСТИ ЗУМА
-// =========================================================
 map.scrollZoom.setWheelZoomRate(1 / 800);
 map.scrollZoom.setZoomRate(1 / 200);
 
-// =========================================================
-// 3. ЭЛЕМЕНТЫ УПРАВЛЕНИЯ
-// =========================================================
 map.addControl(new maplibregl.NavigationControl(), "top-right");
 map.addControl(new maplibregl.FullscreenControl(), "top-right");
 map.addControl(
@@ -40,7 +36,59 @@ map.addControl(
 );
 
 // =========================================================
-// 3.1. БОКОВАЯ ПАНЕЛЬ (гамбургер)
+// 2. API: работа с бэкендом
+// =========================================================
+
+async function apiGetAnimals() {
+    const res = await fetch(`${API_BASE}/api/animals`);
+    if (!res.ok) throw new Error("Ошибка загрузки меток");
+    return res.json();
+}
+
+async function apiCreateAnimal(payload) {
+    const res = await fetch(`${API_BASE}/api/animals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Ошибка сохранения метки");
+    }
+    return res.json();
+}
+
+async function apiDeleteAnimal(id) {
+    const res = await fetch(`${API_BASE}/api/animals/${id}`, { method: "DELETE" });
+    return res.ok;
+}
+
+async function apiGetLostAds() {
+    const res = await fetch(`${API_BASE}/api/lost_ads`);
+    if (!res.ok) throw new Error("Ошибка загрузки объявлений");
+    return res.json();
+}
+
+async function apiCreateLostAd(payload) {
+    const res = await fetch(`${API_BASE}/api/lost_ads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Ошибка сохранения объявления");
+    }
+    return res.json();
+}
+
+async function apiDeleteLostAd(id) {
+    const res = await fetch(`${API_BASE}/api/lost_ads/${id}`, { method: "DELETE" });
+    return res.ok;
+}
+
+// =========================================================
+// 3. БОКОВАЯ ПАНЕЛЬ (гамбургер)
 // =========================================================
 const menuButton = document.getElementById("menu-button");
 const sidebar    = document.getElementById("sidebar");
@@ -56,7 +104,7 @@ menuButton.addEventListener("click", () => {
 });
 
 // =========================================================
-// 3.2. НАЧАЛЬНЫЙ БАННЕР
+// 4. НАЧАЛЬНЫЙ БАННЕР
 // =========================================================
 const bannerOverlay  = document.getElementById("banner-overlay");
 const helpButton     = document.getElementById("help-button");
@@ -67,9 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 bannerOverlay.addEventListener("click", (e) => {
-    if (e.target === bannerOverlay) {
-        bannerOverlay.classList.remove("visible");
-    }
+    if (e.target === bannerOverlay) bannerOverlay.classList.remove("visible");
 });
 
 helpButton.addEventListener("click", () => {
@@ -81,7 +127,7 @@ bannerCloseBtn.addEventListener("click", () => {
 });
 
 // =========================================================
-// 3.3. ПАНЕЛИ «ЗАМЕЧЕННЫЕ» И «ПРОПАВШИЕ»
+// 5. ПАНЕЛИ «ЗАМЕЧЕННЫЕ» И «ПРОПАВШИЕ»
 // =========================================================
 const sidebarSeenLink        = document.getElementById("sidebar-seen-link");
 const sidebarLostLink        = document.getElementById("sidebar-lost-link");
@@ -276,7 +322,7 @@ function renderLostPanel() {
 }
 
 // ---------------------------------------------------------
-// Открытие/закрытие панелей
+// Открытие / закрытие панелей
 // ---------------------------------------------------------
 sidebarSeenLink.addEventListener("click", () => {
     sidebarLostAnimals.classList.remove("open");
@@ -305,7 +351,7 @@ sidebarLostAnimalsBack.addEventListener("click", () => {
 });
 
 // =========================================================
-// 3.4. КРЕСТИКИ ЗАКРЫТИЯ ОКОН
+// 6. КРЕСТИКИ ЗАКРЫТИЯ ОКОН
 // =========================================================
 
 document
@@ -321,7 +367,7 @@ document
     .addEventListener("click", closeViewer);
 
 // =========================================================
-// 3.5. ФИЛЬТРЫ
+// 7. ФИЛЬТРЫ
 // =========================================================
 const filterToggleBtn      = document.getElementById("filter-toggle-btn");
 const lostFilterToggleBtn  = document.getElementById("lost-filter-toggle-btn");
@@ -336,7 +382,6 @@ const FILTER_RADIUS_SEEN_KM = 2;
 const FILTER_RADIUS_LOST_KM = 4;
 
 let filterMode = null;
-
 let activeFilterCenter     = null;
 let activeLostFilterCenter = null;
 
@@ -526,7 +571,7 @@ filterResetBtn.addEventListener("click", () => {
 });
 
 // =========================================================
-// 4. ОБЩИЕ ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// 8. ОБЩИЕ ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // =========================================================
 function escapeHtml(str) {
     return String(str)
@@ -712,7 +757,7 @@ function setupDateField(input) {
 }
 
 // =========================================================
-// 5. АВТОПОДСКАЗКИ АДРЕСА
+// 9. АВТОПОДСКАЗКИ АДРЕСА
 // =========================================================
 const addressSuggestions = document.getElementById("address-suggestions");
 let addressDebounceTimer = null;
@@ -818,7 +863,7 @@ function setupAddressField(inputEl, formatter) {
 }
 
 // =========================================================
-// 6. МОДАЛКА СОЗДАНИЯ МЕТКИ (модалка «+»)
+// 10. МОДАЛКА СОЗДАНИЯ МЕТКИ
 // =========================================================
 
 const plusButton     = document.getElementById("plus-button");
@@ -1104,7 +1149,7 @@ modalOverlay.addEventListener("click", (e) => {
 });
 
 // =========================================================
-// 6.1. МОБИЛЬНЫЙ РЕЖИМ ПОСТАНОВКИ МЕТКИ
+// 11. МОБИЛЬНЫЙ РЕЖИМ ПОСТАНОВКИ МЕТКИ
 // =========================================================
 
 const isMobileDevice = () =>
@@ -1162,10 +1207,10 @@ mobilePlaceCancel.addEventListener("click", () => {
     pendingAddress  = "";
 });
 
-mobilePlaceConfirm.addEventListener("click", () => {
+mobilePlaceConfirm.addEventListener("click", async () => {
     const center = map.getCenter();
 
-    placeMarkerAt(
+    await placeMarkerAt(
         center.lng,
         center.lat,
         pendingAnimal,
@@ -1197,7 +1242,7 @@ mobilePlaceConfirm.addEventListener("click", () => {
 });
 
 // =========================================================
-// 7. МОДАЛКА «Потерял животное»
+// 12. МОДАЛКА «Потерял животное»
 // =========================================================
 
 const lostButton         = document.getElementById("lost-button");
@@ -1353,6 +1398,7 @@ lostSubmitBtn.addEventListener("click", async () => {
 
     if (hasError) return;
 
+    // Геокодируем адрес потери
     let adLng = null;
     let adLat = null;
 
@@ -1373,20 +1419,30 @@ lostSubmitBtn.addEventListener("click", async () => {
         console.error("Не удалось геокодировать адрес потери:", err);
     }
 
-    allLostAds.push({
+    const payload = {
         nickname,
         character,
         contact,
-        animal: lostAnimalSelect.value,
-        okras,
-        time,
-        date,
+        species:    lostAnimalSelect.value,
+        color:      okras,
+        lost_time:  time,
+        lost_date:  date,
         address,
-        photo: lostPhoto,
-        lng: adLng,
-        lat: adLat
-    });
+        latitude:   adLat,
+        longitude:  adLng,
+        photo_data: lostPhoto
+    };
 
+    let saved;
+    try {
+        saved = await apiCreateLostAd(payload);
+    } catch (err) {
+        console.error("Не удалось сохранить объявление:", err);
+        alert("Не удалось сохранить объявление. Проверьте соединение.");
+        return;
+    }
+
+    addLostAdToMemory(saved);
     closeLostModal();
 });
 
@@ -1395,7 +1451,7 @@ lostModalOverlay.addEventListener("click", (e) => {
 });
 
 // =========================================================
-// 8. ПРОСМОТРЩИК МЕТКИ
+// 13. ПРОСМОТРЩИК МЕТКИ
 // =========================================================
 function openViewer(photo, animal, okras, time, date, extras) {
     if (photo) {
@@ -1408,7 +1464,9 @@ function openViewer(photo, animal, okras, time, date, extras) {
 
     viewerAnimal.textContent = animal || "";
     viewerOkras.textContent  = okras ? ("Окрас: " + okras) : "";
-    viewerText.textContent   = (date && time) ? (date + "\u00A0\u00A0\u00A0" + time) : (date || time || "");
+    viewerText.textContent   = (date && time)
+        ? (date + "\u00A0\u00A0\u00A0" + time)
+        : (date || time || "");
 
     viewerExtra.innerHTML = "";
 
@@ -1490,16 +1548,24 @@ document.addEventListener("keydown", (e) => {
 });
 
 // =========================================================
-// 9. СОЗДАНИЕ МЕТКИ — ОБЩАЯ ФУНКЦИЯ
+// 14. СОЗДАНИЕ МЕТКИ — ОБЩИЕ ФУНКЦИИ
 // =========================================================
 
-function placeMarkerAt(lng, lat, animal, okras, time, date, photo, extras) {
+// Рисует метку на карте по данным с сервера (уже с id)
+function addMarkerToMapFromServer(row) {
     const el = document.createElement("div");
     el.className = "map-marker";
 
-    let helpedIcon = "";
+    const extras = {
+        behavior: row.behavior || "",
+        state:    row.state    || "",
+        ready:    !!row.ready,
+        contact:  row.contact  || "",
+        address:  row.address  || ""
+    };
 
-    if (extras && extras.ready) {
+    let helpedIcon = "";
+    if (extras.ready) {
         helpedIcon = `
             <span class="pin-helped-icon">
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -1509,8 +1575,8 @@ function placeMarkerAt(lng, lat, animal, okras, time, date, photo, extras) {
         `;
     }
 
-    const photoHtml = photo
-        ? `<div class="pin-photo" style="background-image:url(${photo})"></div>`
+    const photoHtml = row.photo_data
+        ? `<div class="pin-photo" style="background-image:url(${row.photo_data})"></div>`
         : "";
 
     el.innerHTML = `
@@ -1518,10 +1584,10 @@ function placeMarkerAt(lng, lat, animal, okras, time, date, photo, extras) {
             <div class="pin-body">
                 ${helpedIcon}
                 ${photoHtml}
-                <div class="pin-text">${escapeHtml(animal)}</div>
-                <div class="pin-text">${escapeHtml(truncateOkras(okras))}</div>
-                <div class="pin-text">${escapeHtml(formatDateShort(date))}</div>
-                <div class="pin-text">${escapeHtml(time)}</div>
+                <div class="pin-text">${escapeHtml(row.species)}</div>
+                <div class="pin-text">${escapeHtml(truncateOkras(row.color))}</div>
+                <div class="pin-text">${escapeHtml(formatDateShort(row.observed_date))}</div>
+                <div class="pin-text">${escapeHtml(row.observed_time)}</div>
             </div>
             <div class="pin-tip"></div>
         </div>
@@ -1531,17 +1597,29 @@ function placeMarkerAt(lng, lat, animal, okras, time, date, photo, extras) {
     pinBody.addEventListener("click", (ev) => {
         if (placingMode || mobilePlacingMode) return;
         ev.stopPropagation();
-        openViewer(photo, animal, okras, time, date, extras);
+        openViewer(
+            row.photo_data,
+            row.species,
+            row.color,
+            row.observed_time,
+            row.observed_date,
+            extras
+        );
     });
 
     const markerInstance = new maplibregl.Marker({ element: el, anchor: "bottom" })
-        .setLngLat([lng, lat])
+        .setLngLat([row.longitude, row.latitude])
         .addTo(map);
 
     const newMarkerData = {
-        lng, lat,
-        animal, okras, time, date,
-        photo,
+        id:       row.id,
+        lng:      row.longitude,
+        lat:      row.latitude,
+        animal:   row.species,
+        okras:    row.color,
+        time:     row.observed_time,
+        date:     row.observed_date,
+        photo:    row.photo_data,
         extras,
         instance: markerInstance
     };
@@ -1550,7 +1628,7 @@ function placeMarkerAt(lng, lat, animal, okras, time, date, photo, extras) {
 
     if (activeFilterCenter) {
         const inside = isInCircle(
-            lng, lat,
+            newMarkerData.lng, newMarkerData.lat,
             activeFilterCenter[0], activeFilterCenter[1],
             FILTER_RADIUS_SEEN_KM
         );
@@ -1561,14 +1639,61 @@ function placeMarkerAt(lng, lat, animal, okras, time, date, photo, extras) {
     return newMarkerData;
 }
 
+// Отправляет метку на сервер и рисует её
+async function placeMarkerAt(lng, lat, animal, okras, time, date, photo, extras) {
+    const payload = {
+        species:       animal,
+        color:         okras,
+        observed_time: time,
+        observed_date: date,
+        latitude:      lng,
+        longitude:     lat,
+        photo_data:    photo,
+        behavior:      extras?.behavior || "",
+        state:         extras?.state    || "",
+        ready:         !!extras?.ready,
+        contact:       extras?.contact  || "",
+        address:       extras?.address  || ""
+    };
+
+    let saved;
+    try {
+        saved = await apiCreateAnimal(payload);
+    } catch (err) {
+        console.error("Не удалось сохранить метку:", err);
+        alert("Не удалось сохранить метку на сервере. Проверьте соединение.");
+        return null;
+    }
+
+    return addMarkerToMapFromServer(saved);
+}
+
+// Кладёт данные с сервера в локальный массив объявлений
+function addLostAdToMemory(row) {
+    allLostAds.push({
+        id:        row.id,
+        nickname:  row.nickname,
+        character: row.character,
+        contact:   row.contact,
+        animal:    row.species,
+        okras:     row.color,
+        time:      row.lost_time,
+        date:      row.lost_date,
+        address:   row.address,
+        photo:     row.photo_data,
+        lng:       row.longitude,
+        lat:       row.latitude
+    });
+}
+
 // =========================================================
-// 9.1. КЛИК ПО КАРТЕ — ПК-РЕЖИМ
+// 15. КЛИК ПО КАРТЕ — ПК-РЕЖИМ
 // =========================================================
-map.on("click", (e) => {
+map.on("click", async (e) => {
     if (!placingMode) return;
     if (mobilePlacingMode) return;
 
-    placeMarkerAt(
+    await placeMarkerAt(
         e.lngLat.lng,
         e.lngLat.lat,
         pendingAnimal,
@@ -1602,16 +1727,34 @@ map.on("click", (e) => {
 map.dragRotate.disable();
 
 // =========================================================
-// 10. ОТЛАДКА И ЗАГРУЗКА
+// 16. ЗАГРУЗКА И ОТЛАДКА
 // =========================================================
 map.on("error", (e) => {
     console.error("Ошибка карты:", e.error);
 });
 
-map.on("load", () => {
+map.on("load", async () => {
     console.log("✅ Карта успешно загружена!");
     updateMarkerScale();
     preloadMoscowRegion();
+
+    // Загрузка сохранённых меток
+    try {
+        const animals = await apiGetAnimals();
+        animals.forEach(addMarkerToMapFromServer);
+        console.log(`Восстановлено меток: ${animals.length}`);
+    } catch (err) {
+        console.error("Ошибка загрузки меток:", err);
+    }
+
+    // Загрузка сохранённых объявлений
+    try {
+        const ads = await apiGetLostAds();
+        ads.forEach(addLostAdToMemory);
+        console.log(`Восстановлено объявлений: ${ads.length}`);
+    } catch (err) {
+        console.error("Ошибка загрузки объявлений:", err);
+    }
 });
 
 map.on("zoom", updateMarkerScale);
