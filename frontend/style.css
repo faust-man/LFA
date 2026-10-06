@@ -5,7 +5,6 @@
 }
 
 :root {
-    /* Масштаб метки — управляется из JS в зависимости от зума */
     --marker-scale: 1;
 }
 
@@ -27,7 +26,7 @@ body {
 }
 
 /* =========================================
-   Кнопка-гамбургер (левый верхний угол)
+   Кнопка-гамбургер
    ========================================= */
 #menu-button {
     position: fixed;
@@ -118,7 +117,7 @@ body {
 }
 
 /* =========================================
-   Боковая панель
+   Основное боковое меню
    ========================================= */
 #sidebar {
     position: fixed;
@@ -170,6 +169,445 @@ body {
 
 .sidebar-link:hover {
     color: #e74c3c;
+}
+
+/* =========================================
+   Панели «Замеченные» и «Пропавшие животные»
+   ========================================= */
+#sidebar-animals,
+#sidebar-lost-animals {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    height: 100vh;
+    width: 374px;
+    max-width: 100vw;
+
+    background-color: #d9d9d9;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.25);
+    z-index: 155;
+
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+}
+
+#sidebar-animals.open,
+#sidebar-lost-animals.open {
+    transform: translateX(0);
+}
+
+.sidebar-animals-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 16px 20px 14px;
+    flex-shrink: 0;
+
+    background-color: #d9d9d9;
+    border-bottom: 1px solid #bdbdbd;
+}
+
+#sidebar-animals-back,
+#sidebar-lost-animals-back {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+
+    background-color: #ffffff;
+    border: 1px solid #d0d0d0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 20px;
+    line-height: 1;
+    color: #333333;
+
+    cursor: pointer;
+    outline: none;
+    flex-shrink: 0;
+
+    transition: background-color 0.15s ease,
+                transform 0.15s ease;
+}
+
+#sidebar-animals-back:hover,
+#sidebar-lost-animals-back:hover {
+    background-color: #f2f2f2;
+}
+
+#sidebar-animals-back:active,
+#sidebar-lost-animals-back:active {
+    background-color: #e8e8e8;
+    transform: scale(0.95);
+}
+
+.sidebar-animals-title {
+    color: #000000;
+    font-size: 18px;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+#filter-toggle-btn,
+#lost-filter-toggle-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+
+    background: #a8a8a8;
+    border: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-left: auto;
+    flex-shrink: 0;
+
+    cursor: pointer;
+    outline: none;
+
+    transition: background-color 0.15s ease,
+                transform 0.15s ease;
+}
+
+#filter-toggle-btn svg,
+#lost-filter-toggle-btn svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+}
+
+#filter-toggle-btn:hover,
+#lost-filter-toggle-btn:hover {
+    background: #9a9a9a;
+}
+
+#filter-toggle-btn:active,
+#lost-filter-toggle-btn:active {
+    transform: scale(0.94);
+}
+
+#sidebar-animals-list,
+#sidebar-lost-animals-list {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+
+    padding: 16px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+#sidebar-animals-list::-webkit-scrollbar,
+#sidebar-lost-animals-list::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.sidebar-animals-empty {
+    color: #666666;
+    font-size: 14px;
+    text-align: center;
+    padding: 40px 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* =========================================
+   Окно фильтров
+   ========================================= */
+#sidebar-filters {
+    position: fixed;
+    left: 390px;
+    top: 80px;
+    width: 280px;
+
+    background: #d9d9d9;
+    border-radius: 12px;
+    padding: 18px;
+
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+    z-index: 160;
+
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+#sidebar-filters.visible {
+    display: flex;
+}
+
+.sidebar-filters-title {
+    text-align: center;
+    color: #000000;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.sidebar-filters-label {
+    color: #000000;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+}
+
+#filter-address {
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+}
+
+#filter-reset-btn {
+    background: none;
+    border: none;
+    padding: 0;
+
+    color: #000000;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: inherit;
+
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+
+    cursor: pointer;
+    align-self: flex-start;
+
+    transition: color 0.15s ease;
+}
+
+#filter-reset-btn:hover {
+    color: #e74c3c;
+}
+
+#filter-apply-btn {
+    background: #e74c3c;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+
+    font-size: 16px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+
+    transition: background-color 0.15s ease;
+}
+
+#filter-apply-btn:hover {
+    background: #c0392b;
+}
+
+#filter-apply-btn:active {
+    background: #a93226;
+}
+
+#filter-close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+
+    background: rgba(0, 0, 0, 0.08);
+    color: #333333;
+
+    border: none;
+    outline: none;
+
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding-bottom: 2px;
+
+    transition: background-color 0.15s ease,
+                color 0.15s ease,
+                transform 0.15s ease;
+
+    z-index: 5;
+}
+
+#filter-close-btn:hover {
+    background: rgba(0, 0, 0, 0.15);
+    color: #e74c3c;
+}
+
+#filter-close-btn:active {
+    transform: scale(0.9);
+}
+
+/* =========================================
+   Карточка
+   ========================================= */
+.animal-card {
+    background-color: #a8a8a8;
+    border-radius: 10px;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+    flex-shrink: 0;
+}
+
+.animal-card-photo {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #cccccc;
+
+    position: relative;
+}
+
+.animal-card-separator {
+    height: 4px;
+    background-color: #c8c8c8;
+    flex-shrink: 0;
+}
+
+.animal-card-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+
+    padding: 14px 16px 12px;
+}
+
+.animal-card-label {
+    color: #000000;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.animal-card-value {
+    color: #000000;
+    font-size: 15px;
+    font-weight: 400;
+
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.animal-card-btn {
+    margin: 6px auto 16px;
+
+    background: #e74c3c;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+
+    font-size: 16px;
+    font-weight: 500;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    cursor: pointer;
+
+    transition: background-color 0.15s ease;
+}
+
+.animal-card-btn:hover {
+    background: #c0392b;
+}
+
+.animal-card-btn:active {
+    background: #a93226;
+}
+
+.animal-card-expanded {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+
+    padding: 0 16px 6px;
+}
+
+.animal-card.expanded .animal-card-expanded {
+    display: flex;
+}
+
+.animal-card-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+}
+
+.animal-card-photo .pin-helped-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #ffffff;
+    border-radius: 50%;
+
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+
+    z-index: 2;
+    pointer-events: none;
+}
+
+.animal-card-photo .pin-helped-icon svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+    fill: #e74c3c;
 }
 
 /* =========================================
@@ -302,9 +740,6 @@ body {
     margin-top: -1px;
 }
 
-/* =========================================
-   Значок «приютил» в углу метки
-   ========================================= */
 .pin-body .pin-helped-icon {
     position: absolute;
     top: -10px;
@@ -360,7 +795,6 @@ body {
 }
 
 .map-marker .pin {
-    /* Масштаб метки зависит от зума — см. script.js */
     transform: scale(var(--marker-scale, 1));
     transform-origin: bottom center;
 }
@@ -383,11 +817,25 @@ body.placing-mode .map-marker .pin-body {
     position: fixed;
     inset: 0;
     display: none;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+
+    padding: 16px;
 
     background: rgba(0, 0, 0, 0.35);
     z-index: 100;
+
+    overflow-y: auto;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+#modal-overlay::-webkit-scrollbar,
+#lost-modal-overlay::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 #modal-overlay.visible,
@@ -399,8 +847,11 @@ body.placing-mode .map-marker .pin-body {
     background: #d9d9d9;
     border-radius: 14px;
     padding: 22px 20px;
-    min-width: 240px;
+
+    width: 100%;
     max-width: 420px;
+    min-width: 240px;
+
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -408,21 +859,16 @@ body.placing-mode .map-marker .pin-body {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-    max-height: 90vh;
-    overflow-y: auto;
+    margin: auto;
 
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
+    max-height: none;
+    overflow: visible;
 
-.modal::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
+    position: relative;
 }
 
 #lost-modal-overlay .modal {
-    min-width: 340px;
+    max-width: 460px;
 }
 
 .modal label {
@@ -487,6 +933,8 @@ body.placing-mode .map-marker .pin-body {
 
     transition: background-color 0.15s ease;
     position: relative;
+
+    flex-shrink: 0;
 }
 
 .photo-drop:hover {
@@ -509,9 +957,6 @@ body.placing-mode .map-marker .pin-body {
     display: none;
 }
 
-/* =========================================
-   Кнопки в модалках
-   ========================================= */
 #submit-btn {
     background: #e74c3c;
     color: #ffffff;
@@ -559,9 +1004,6 @@ body.placing-mode .map-marker .pin-body {
     background: #a93226;
 }
 
-/* =========================================
-   Кнопка «Рассказать больше»
-   ========================================= */
 #more-btn {
     background: none;
     border: none;
@@ -587,9 +1029,6 @@ body.placing-mode .map-marker .pin-body {
     color: #e74c3c;
 }
 
-/* =========================================
-   Дополнительные поля
-   ========================================= */
 #extra-fields {
     display: none;
     flex-direction: column;
@@ -600,9 +1039,6 @@ body.placing-mode .map-marker .pin-body {
     display: flex;
 }
 
-/* =========================================
-   Ползунок Нет/Да
-   ========================================= */
 .toggle-row {
     display: flex;
     align-items: center;
@@ -661,9 +1097,6 @@ body.placing-mode .map-marker .pin-body {
     transform: translateX(24px);
 }
 
-/* =========================================
-   Блок «ready-extra»
-   ========================================= */
 #ready-extra {
     display: none;
     flex-direction: column;
@@ -674,9 +1107,6 @@ body.placing-mode .map-marker .pin-body {
     display: flex;
 }
 
-/* =========================================
-   Подсказки адреса
-   ========================================= */
 #address-suggestions {
     display: none;
 
@@ -714,9 +1144,6 @@ body.placing-mode .map-marker .pin-body {
     background-color: #f2f2f2;
 }
 
-/* =========================================
-   Строка «Время» / «Дата» с кнопкой «изм.»
-   ========================================= */
 .time-row {
     display: flex;
     align-items: center;
@@ -767,9 +1194,6 @@ body.placing-mode .map-marker .pin-body {
     color: #e74c3c;
 }
 
-/* =========================================
-   Подсветка незаполненных обязательных полей
-   ========================================= */
 .modal input.input-error,
 .modal textarea.input-error {
     outline: 2px solid #e74c3c;
@@ -789,9 +1213,74 @@ body.placing-mode .map-marker .pin-body {
     100% { transform: translateX(0); }
 }
 
-/* =========================================
-   Оверлей просмотра метки
-   ========================================= */
+.modal-close-btn,
+.viewer-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+
+    background: rgba(0, 0, 0, 0.08);
+    color: #333333;
+
+    border: none;
+    outline: none;
+
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding-bottom: 3px;
+
+    transition: background-color 0.15s ease,
+                color 0.15s ease,
+                transform 0.15s ease;
+
+    z-index: 5;
+}
+
+.modal-close-btn:hover,
+.viewer-close-btn:hover {
+    background: rgba(0, 0, 0, 0.15);
+    color: #e74c3c;
+}
+
+.modal-close-btn:active,
+.viewer-close-btn:active {
+    transform: scale(0.9);
+}
+
+.viewer-close-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+
+    width: 40px;
+    height: 40px;
+
+    font-size: 26px;
+
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+
+    z-index: 210;
+}
+
+.viewer-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: #ffb3aa;
+}
+
 #viewer-overlay {
     position: fixed;
     inset: 0;
@@ -880,9 +1369,6 @@ body.placing-mode .map-marker .pin-body {
     white-space: pre;
 }
 
-/* =========================================
-   Доп. данные в просмотрщике
-   ========================================= */
 #viewer-extra {
     display: flex;
     flex-direction: column;
@@ -919,6 +1405,84 @@ body.placing-mode .map-marker .pin-body {
     white-space: pre-wrap;
     word-wrap: break-word;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* =========================================
+   Мобильный режим постановки метки
+   ========================================= */
+#mobile-place-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+
+    pointer-events: none;
+
+    z-index: 20;
+}
+
+#mobile-place-overlay.visible {
+    display: block;
+}
+
+.mobile-place-pin {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -100%);
+
+    pointer-events: none;
+}
+
+.mobile-place-actions {
+    position: absolute;
+    bottom: 34px;
+    left: 0;
+    right: 0;
+
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+
+    pointer-events: none;
+}
+
+.mobile-place-actions button {
+    pointer-events: auto;
+
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+
+    background: #e74c3c;
+    border: none;
+    outline: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+
+    transition: transform 0.15s ease,
+                background-color 0.15s ease;
+}
+
+.mobile-place-actions button svg {
+    width: 26px;
+    height: 26px;
+    display: block;
+}
+
+.mobile-place-actions button:hover {
+    background: #c0392b;
+}
+
+.mobile-place-actions button:active {
+    background: #a93226;
+    transform: scale(0.93);
 }
 
 /* =========================================
@@ -1079,7 +1643,6 @@ body.placing-mode .map-marker .pin-body {
     border-radius: 1px;
 }
 
-/* Увеличенный значок сердечка в баннере */
 .banner-heart-icon {
     width: 44px;
     height: 44px;
@@ -1103,7 +1666,6 @@ body.placing-mode .map-marker .pin-body {
     fill: #e74c3c;
 }
 
-/* Текст в строке с сердечком — по центру */
 .banner-heart-icon ~ .banner-text {
     flex: 1;
     text-align: center;
@@ -1135,9 +1697,6 @@ body.placing-mode .map-marker .pin-body {
     background: #a93226;
 }
 
-/* =========================================
-   Кнопка «?» → «? Функционал кнопок» (левый нижний угол)
-   ========================================= */
 #help-button {
     position: fixed;
     bottom: 24px;
@@ -1202,4 +1761,53 @@ body.placing-mode .map-marker .pin-body {
 #help-button:active {
     background: rgba(90, 90, 90, 0.9);
     transform: scale(0.97);
+}
+
+/* =========================================
+   Мобильная адаптация
+   ========================================= */
+@media (max-width: 768px) {
+
+    html,
+    body {
+        touch-action: manipulation;
+        -webkit-text-size-adjust: 100%;
+        overscroll-behavior: none;
+    }
+
+    body.modal-open #menu-button,
+    body.modal-open #lost-button,
+    body.modal-open #help-button {
+        display: none !important;
+    }
+
+    #sidebar,
+    #sidebar-animals,
+    #sidebar-lost-animals {
+        width: 100vw;
+    }
+
+    #sidebar-filters {
+        left: 0;
+        right: 0;
+        top: auto;
+        bottom: 0;
+
+        width: 100vw;
+        max-width: 100vw;
+
+        margin: 0;
+
+        border-radius: 18px 18px 0 0;
+
+        z-index: 170;
+
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
+
+        padding: 22px 20px 26px;
+    }
+
+    .modal {
+        max-width: 92vw;
+    }
 }
