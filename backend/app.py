@@ -5,22 +5,26 @@ from datetime import datetime
 import psycopg
 from flask import Flask, jsonify, request
 from psycopg.rows import dict_row
+from psycopg.conninfo import make_conninfo
 
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_cors import CORS
 
 
 # === Создание приложения ===
 app = Flask(__name__)
 
-# CORS: разрешаем фронтенду (с любого origin, на проде — сузьте)
-CORS(app, resources={r"/api/*": {"origins": "*"}, r"/health": {"origins": "*"}})
-
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 
-DATABASE_URL = os.environ["DATABASE_URL"]
+DATABASE_URL = os.getenv("DATABASE_URL") or make_conninfo(
+    host=os.getenv("PGHOST", "database"),
+    port=os.getenv("PGPORT", "5432"),
+    dbname=os.getenv("POSTGRES_DB", "animals_db"),
+    user=os.getenv("POSTGRES_USER", "animal_user"),
+    password=os.getenv("POSTGRES_PASSWORD", "animal_password"),
+    connect_timeout=5,
+)
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 limiter = Limiter(
@@ -63,23 +67,44 @@ def validate_common(data):
     """Общая валидация для метки и объявления."""
     errors = []
 
+    text_limits = {
+        "name": 100, "nickname": 100, "species": 50, "color": 100,
+        "observed_time": 5, "lost_time": 5, "observed_date": 10,
+        "lost_date": 10, "behavior": None, "state": None,
+        "contact": 200, "address": None, "character": None, "photo_data": None,
+    }
+    for field, maximum in text_limits.items():
+        value = data.get(field)
+        if value is not None:
+            if not isinstance(value, str):
+                errors.append(f"{field} должен быть строкой")
+            elif maximum is not None and len(value) > maximum:
+                errors.append(f"{field}: максимум {maximum} символов")
+    if "ready" in data and not isinstance(data["ready"], bool):
+        errors.append("ready должен быть логическим значением")
+
     if "observed_time" in data and data["observed_time"] not in (None, ""):
-        if not TIME_REGEX.match(str(data["observed_time"])):
+        if not TIME_REGEX.fullmatch(str(data["observed_time"])):
             errors.append("Некорректный формат observed_time. Ожидается ЧЧ:ММ")
 
     if "lost_time" in data and data["lost_time"] not in (None, ""):
-        if not TIME_REGEX.match(str(data["lost_time"])):
+        if not TIME_REGEX.fullmatch(str(data["lost_time"])):
             errors.append("Некорректный формат lost_time. Ожидается ЧЧ:ММ")
 
     for field in ("observed_date", "lost_date"):
         if field in data and data[field] not in (None, ""):
-            if not DATE_REGEX.match(str(data[field])):
+            if not DATE_REGEX.fullmatch(str(data[field])):
                 errors.append(f"Некорректный формат {field}. Ожидается ДД.ММ.ГГГГ")
+            else:
+                try:
+                    datetime.strptime(data[field], "%d.%m.%Y")
+                except (ValueError, TypeError):
+                    errors.append(f"Некорректная дата {field}")
 
     if "latitude" in data and data["latitude"] is not None:
         try:
             lat = float(data["latitude"])
-            if not (-90 <= lat <= 90):
+            if isinstance(data["latitude"], bool) or not (-90 <= lat <= 90):
                 errors.append("Широта вне диапазона -90..90")
         except (ValueError, TypeError):
             errors.append("Широта должна быть числом")
@@ -87,7 +112,7 @@ def validate_common(data):
     if "longitude" in data and data["longitude"] is not None:
         try:
             lon = float(data["longitude"])
-            if not (-180 <= lon <= 180):
+            if isinstance(data["longitude"], bool) or not (-180 <= lon <= 180):
                 errors.append("Долгота вне диапазона -180..180")
         except (ValueError, TypeError):
             errors.append("Долгота должна быть числом")
@@ -122,7 +147,7 @@ def create_animal():
     if not isinstance(data, dict):
         return jsonify({"error": "Некорректный JSON"}), 400
 
-    if (data.get("species") is None
+    if (not isinstance(data.get("species"), str) or not data["species"].strip()
             or data.get("latitude") is None
             or data.get("longitude") is None):
         return jsonify({"error": "species, latitude, longitude обязательны"}), 400
@@ -160,6 +185,37 @@ def create_animal():
     return jsonify(to_json(row)), 201
 
 
+@app.patch("/api/animals/<int:animal_id>")
+@limiter.limit("30 per minute")
+def update_animal(animal_id):
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Некорректный JSON"}), 400
+    allowed = {
+        "name", "species", "color", "observed_time", "observed_date",
+        "latitude", "longitude", "photo_data", "behavior", "state",
+        "ready", "contact", "address",
+    }
+    fields = {key: value for key, value in data.items() if key in allowed}
+    if not fields:
+        return jsonify({"error": "Нет полей для обновления"}), 400
+    if any(value is None and key != "photo_data" for key, value in fields.items()):
+        return jsonify({"error": "Обязательные поля не могут быть null"}), 400
+    if "species" in fields and (not isinstance(fields["species"], str) or not fields["species"].strip()):
+        return jsonify({"error": "species обязателен"}), 400
+    errors = validate_common(fields)
+    if errors:
+        return jsonify({"errors": errors}), 400
+    assignments = ", ".join(f"{field} = %s" for field in fields)
+    row = db(
+        f"UPDATE animals SET {assignments} WHERE id = %s RETURNING *",
+        tuple(fields.values()) + (animal_id,),
+    )
+    if row is None:
+        return jsonify({"error": "Метка не найдена"}), 404
+    return jsonify(to_json(row))
+
+
 @app.delete("/api/animals/<int:animal_id>")
 @limiter.limit("30 per minute")
 def delete_animal(animal_id):
@@ -188,7 +244,7 @@ def create_lost_ad():
         return jsonify({"error": "Некорректный JSON"}), 400
 
     required = ("nickname", "character", "contact", "species")
-    missing = [f for f in required if not data.get(f)]
+    missing = [f for f in required if not isinstance(data.get(f), str) or not data[f].strip()]
     if missing:
         return jsonify({"error": f"Обязательные поля: {', '.join(missing)}"}), 400
 
@@ -239,10 +295,23 @@ def delete_lost_ad(ad_id):
 @limiter.exempt
 def health():
     try:
-        db("SELECT 1", fetch="one")
+        db("SELECT observed_date, behavior, state, ready, contact, address FROM animals LIMIT 0")
+        db("SELECT id FROM lost_ads LIMIT 0")
         return jsonify({"status": "ok", "database": "ok"}), 200
     except psycopg.Error:
         return jsonify({"status": "error", "database": "unavailable"}), 503
+
+
+@app.errorhandler(psycopg.DataError)
+@app.errorhandler(psycopg.IntegrityError)
+def invalid_database_input(error):
+    return jsonify({"error": "Некорректные данные"}), 400
+
+
+@app.errorhandler(psycopg.OperationalError)
+def database_unavailable(error):
+    app.logger.exception("PostgreSQL unavailable")
+    return jsonify({"error": "База данных временно недоступна"}), 503
 
 
 @app.errorhandler(429)

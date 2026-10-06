@@ -1,4 +1,4 @@
-Flask>=3.0
-psycopg[binary]>=3.2
-gunicorn>=23.0
-Flask-Limiter[redis]>=3.5
+Flask>=3.0,<4
+psycopg[binary]>=3.2,<4
+gunicorn>=23.0,<24
+Flask-Limiter[redis]>=3.5,<4
