@@ -26,10 +26,18 @@ services:
     restart: unless-stopped
 
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-animal_user}:${POSTGRES_PASSWORD:-animal_password}@database:5432/${POSTGRES_DB:-animals_db}
+      PGHOST: database
+      POSTGRES_DB: ${POSTGRES_DB:-animals_db}
+      POSTGRES_USER: ${POSTGRES_USER:-animal_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-animal_password}
+      REDIS_URL: redis://redis:6379/0
 
     depends_on:
       database:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      redis:
         condition: service_healthy
 
     healthcheck:
@@ -50,12 +58,48 @@ services:
     networks:
       - animal-net
 
+  migrate:
+    image: postgres:17-alpine
+    restart: "no"
+    environment:
+      PGHOST: database
+      PGDATABASE: ${POSTGRES_DB:-animals_db}
+      PGUSER: ${POSTGRES_USER:-animal_user}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-animal_password}
+    volumes:
+      - ./database/init.sql:/migrations/init.sql:ro
+    command:
+      [
+        "psql",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "--single-transaction",
+        "-f",
+        "/migrations/init.sql",
+      ]
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - animal-net
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - animal-net
+
   nginx:
     image: nginx:alpine
     restart: unless-stopped
 
     ports:
-      - "80:80"
+      - "${HTTP_PORT:-80}:80"
 
     volumes:
       - ./frontend:/usr/share/nginx/html:ro

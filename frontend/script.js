@@ -1,7 +1,7 @@
 // =========================================================
 // 0. АДРЕС БЭКЕНДА
 // =========================================================
-const API_BASE = "http://localhost:5000";
+const API_BASE = ""; // API доступно через Nginx на том же адресе, что и сайт.
 
 // =========================================================
 // 1. ИНИЦИАЛИЗАЦИЯ КАРТЫ
@@ -53,7 +53,7 @@ async function apiCreateAnimal(payload) {
     });
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Ошибка сохранения метки");
+        throw new Error(err.error || err.errors?.join("; ") || "Ошибка сохранения метки");
     }
     return res.json();
 }
@@ -77,7 +77,7 @@ async function apiCreateLostAd(payload) {
     });
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Ошибка сохранения объявления");
+        throw new Error(err.error || err.errors?.join("; ") || "Ошибка сохранения объявления");
     }
     return res.json();
 }
