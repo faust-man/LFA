@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Карта мира на MapLibre + OpenFreeMap</title>
 
     <link
@@ -25,10 +25,57 @@
     <!-- Кнопка «Потерял животное» -->
     <button id="lost-button" type="button">Потерял животное</button>
 
-    <!-- Боковая панель -->
+    <!-- Основное боковое меню -->
     <aside id="sidebar">
-        <button class="sidebar-link" type="button">Пропавшие животные</button>
-        <button class="sidebar-link" type="button">Замеченные животные</button>
+        <button class="sidebar-link" id="sidebar-lost-link" type="button">Пропавшие животные</button>
+        <button class="sidebar-link" id="sidebar-seen-link" type="button">Замеченные животные</button>
+    </aside>
+
+    <!-- Панель «Замеченные животные» -->
+    <aside id="sidebar-animals">
+        <div class="sidebar-animals-header">
+            <button id="sidebar-animals-back" type="button" aria-label="Назад">←</button>
+            <span class="sidebar-animals-title">Замеченные животные</span>
+            <button id="filter-toggle-btn" type="button" aria-label="Фильтры">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect x="6"  y="3" width="3" height="18" fill="#555555" rx="0.5"/>
+                    <rect x="15" y="3" width="3" height="18" fill="#555555" rx="0.5"/>
+                    <circle cx="7.5"  cy="5.5"  r="2.5" fill="#555555"/>
+                    <circle cx="16.5" cy="18.5" r="2.5" fill="#555555"/>
+                </svg>
+            </button>
+        </div>
+        <div id="sidebar-animals-list"></div>
+    </aside>
+
+    <!-- Панель «Пропавшие животные» -->
+    <aside id="sidebar-lost-animals">
+        <div class="sidebar-animals-header">
+            <button id="sidebar-lost-animals-back" type="button" aria-label="Назад">←</button>
+            <span class="sidebar-animals-title">Пропавшие животные</span>
+            <button id="lost-filter-toggle-btn" type="button" aria-label="Фильтры">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect x="6"  y="3" width="3" height="18" fill="#555555" rx="0.5"/>
+                    <rect x="15" y="3" width="3" height="18" fill="#555555" rx="0.5"/>
+                    <circle cx="7.5"  cy="5.5"  r="2.5" fill="#555555"/>
+                    <circle cx="16.5" cy="18.5" r="2.5" fill="#555555"/>
+                </svg>
+            </button>
+        </div>
+        <div id="sidebar-lost-animals-list"></div>
+    </aside>
+
+    <!-- Окно фильтров -->
+    <aside id="sidebar-filters">
+        <button id="filter-close-btn" type="button" aria-label="Закрыть">×</button>
+
+        <div class="sidebar-filters-title">Фильтры</div>
+
+        <label for="filter-address" id="filter-address-label" class="sidebar-filters-label">Адрес поиска (2 км радиус)</label>
+        <input id="filter-address" type="text" autocomplete="off" />
+
+        <button id="filter-reset-btn" type="button">Сбросить</button>
+        <button id="filter-apply-btn" type="button">Применить</button>
     </aside>
 
     <!-- Кнопка «+» с кошачьей головой -->
@@ -59,6 +106,8 @@
     <div id="modal-overlay">
         <div class="modal">
 
+            <button class="modal-close-btn" type="button" aria-label="Закрыть">×</button>
+
             <label>Прикрепить фото</label>
             <div class="photo-drop" id="photo-drop">
                 <span class="photo-plus">+</span>
@@ -86,7 +135,6 @@
                 <button id="edit-date-btn" type="button">изм.</button>
             </div>
 
-            <!-- Дополнительные поля (раскрываются по «Рассказать больше») -->
             <div id="extra-fields">
 
                 <label for="behavior-input" class="label-left">Поведение животного</label>
@@ -115,10 +163,7 @@
                 </div>
             </div>
 
-            <!-- Кнопка «Поставить метку» — над «Рассказать больше» -->
             <button id="submit-btn" type="button">Поставить метку</button>
-
-            <!-- Кнопка «Рассказать больше» — самая нижняя -->
             <button id="more-btn" type="button">Рассказать больше</button>
 
         </div>
@@ -130,6 +175,8 @@
     <!-- Модальное окно «Потерял животное» -->
     <div id="lost-modal-overlay">
         <div class="modal">
+
+            <button class="modal-close-btn" type="button" aria-label="Закрыть">×</button>
 
             <label>Прикрепить фото</label>
             <div class="photo-drop" id="lost-photo-drop">
@@ -177,6 +224,7 @@
     <!-- Просмотр метки -->
     <div id="viewer-overlay">
         <div class="viewer-inner">
+            <button class="viewer-close-btn" type="button" aria-label="Закрыть">×</button>
             <img id="viewer-photo" src="" alt="" />
             <div id="viewer-animal"></div>
             <div id="viewer-okras"></div>
@@ -185,7 +233,45 @@
         </div>
     </div>
 
-        <!-- Начальный баннер -->
+    <!-- Мобильный режим постановки метки -->
+    <div id="mobile-place-overlay">
+        <div class="mobile-place-pin">
+            <div class="pin">
+                <div class="pin-body">
+                    <div class="pin-photo" id="mobile-preview-photo" style="display:none"></div>
+                    <div class="pin-text" id="mobile-preview-animal"></div>
+                    <div class="pin-text" id="mobile-preview-okras"></div>
+                    <div class="pin-text" id="mobile-preview-date"></div>
+                    <div class="pin-text" id="mobile-preview-text"></div>
+                </div>
+                <div class="pin-tip"></div>
+            </div>
+        </div>
+
+        <div class="mobile-place-actions">
+            <button id="mobile-place-cancel" type="button" aria-label="Отмена">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M6 6 L18 18 M6 18 L18 6"
+                          stroke="#ffffff"
+                          stroke-width="3"
+                          stroke-linecap="round"/>
+                </svg>
+            </button>
+
+            <button id="mobile-place-confirm" type="button" aria-label="Поставить">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M4 12 L10 18 L20 6"
+                          stroke="#ffffff"
+                          stroke-width="3"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          fill="none"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Начальный баннер -->
     <div id="banner-overlay">
         <div class="banner">
             <div class="banner-title">Функционал кнопок</div>
