@@ -105,16 +105,6 @@ p {
   font-size: 21px;
   min-height: 58px;
 }
-.edit {
-  outline: none;
-}
-.edit:focus {
-  box-shadow: 0 2px #769b43;
-}
-.edit:empty:before {
-  content: attr(data-placeholder);
-  color: #819487;
-}
 .small {
   font-size: 16px;
   line-height: 1.4;
@@ -163,7 +153,6 @@ p {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  cursor: pointer;
 }
 .photo svg {
   width: 100px;
