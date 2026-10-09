@@ -1,6 +1,8 @@
 # === Импорты ===
 import os
 import re
+import base64
+import binascii
 from datetime import datetime
 import psycopg
 from flask import Flask, jsonify, request
@@ -10,10 +12,19 @@ from psycopg.conninfo import make_conninfo
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.exceptions import RequestEntityTooLarge
+
+if __package__:
+    from .duplicates import DuplicateRecord, lock_writes, check_duplicate, check_update
+else:
+    from duplicates import DuplicateRecord, lock_writes, check_duplicate, check_update
 
 
 # === Создание приложения ===
 app = Flask(__name__)
+MAX_PHOTO_BYTES = 5 * 1024 * 1024
+# Base64 adds roughly one third to the image size; reserve room for other fields.
+app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 
@@ -41,10 +52,16 @@ TIME_REGEX = re.compile(r"^([0-1][0-9]|2[0-3]):[0-5][0-9]$")
 DATE_REGEX = re.compile(r"^\d{2}\.\d{2}\.\d{4}$")
 
 
-def db(sql, params=(), fetch="one"):
+def db(sql, params=(), fetch="one", duplicate_table=None, duplicate_update=None):
     """Единая безопасная точка общения с PostgreSQL."""
     with psycopg.connect(DATABASE_URL, row_factory=dict_row) as conn:
         with conn.cursor() as cur:
+            if duplicate_table is not None:
+                lock_writes(cur, duplicate_table)
+                check_duplicate(cur, duplicate_table, params)
+            if duplicate_update is not None:
+                table, record_id, changes = duplicate_update
+                check_update(cur, table, record_id, changes)
             cur.execute(sql, params)
             if fetch == "one":
                 return cur.fetchone()
@@ -66,6 +83,21 @@ def to_json(row):
 def validate_common(data):
     """Общая валидация для метки и объявления."""
     errors = []
+
+    photo = data.get("photo_data")
+    if isinstance(photo, str) and photo:
+        header, separator, encoded = photo.partition(",")
+        if not separator or not re.fullmatch(r"data:image/[a-zA-Z0-9.+-]+;base64", header):
+            errors.append("photo_data должен содержать изображение в формате data URL base64")
+        elif len(encoded) > 4 * ((MAX_PHOTO_BYTES + 2) // 3):
+            raise RequestEntityTooLarge(description="Фото должно быть не больше 5 МБ")
+        else:
+            try:
+                decoded = base64.b64decode(encoded, validate=True)
+                if len(decoded) > MAX_PHOTO_BYTES:
+                    raise RequestEntityTooLarge(description="Фото должно быть не больше 5 МБ")
+            except (ValueError, binascii.Error):
+                errors.append("Некорректные данные фотографии base64")
 
     text_limits = {
         "name": 100, "nickname": 100, "species": 50, "color": 100,
@@ -125,14 +157,14 @@ def validate_common(data):
 # ==========================================
 
 @app.get("/api/animals")
-@limiter.limit("30 per minute")
+@limiter.limit("5 per minute")
 def list_animals():
     rows = db("SELECT * FROM animals ORDER BY id", fetch="all")
     return jsonify([to_json(row) for row in rows])
 
 
 @app.get("/api/animals/<int:animal_id>")
-@limiter.limit("30 per minute")
+@limiter.limit("5 per minute")
 def get_animal(animal_id):
     row = db("SELECT * FROM animals WHERE id = %s", (animal_id,))
     if row is None:
@@ -141,7 +173,7 @@ def get_animal(animal_id):
 
 
 @app.post("/api/animals")
-@limiter.limit("30 per minute")
+@limiter.limit("5 per minute")
 def create_animal():
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
@@ -181,12 +213,13 @@ def create_animal():
             data.get("contact") or "",
             data.get("address") or "",
         ),
+        duplicate_table="animals",
     )
     return jsonify(to_json(row)), 201
 
 
 @app.patch("/api/animals/<int:animal_id>")
-@limiter.limit("30 per minute")
+@limiter.limit("5 per minute")
 def update_animal(animal_id):
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
@@ -210,6 +243,7 @@ def update_animal(animal_id):
     row = db(
         f"UPDATE animals SET {assignments} WHERE id = %s RETURNING *",
         tuple(fields.values()) + (animal_id,),
+        duplicate_update=("animals", animal_id, fields),
     )
     if row is None:
         return jsonify({"error": "Метка не найдена"}), 404
@@ -217,7 +251,7 @@ def update_animal(animal_id):
 
 
 @app.delete("/api/animals/<int:animal_id>")
-@limiter.limit("30 per minute")
+@limiter.limit("5 per minute")
 def delete_animal(animal_id):
     row = db("DELETE FROM animals WHERE id = %s RETURNING id", (animal_id,))
     if row is None:
@@ -230,14 +264,14 @@ def delete_animal(animal_id):
 # ==========================================
 
 @app.get("/api/lost_ads")
-@limiter.limit("30 per minute")
+@limiter.limit("5 per minute")
 def list_lost_ads():
     rows = db("SELECT * FROM lost_ads ORDER BY id", fetch="all")
     return jsonify([to_json(row) for row in rows])
 
 
 @app.post("/api/lost_ads")
-@limiter.limit("30 per minute")
+@limiter.limit("5 per minute")
 def create_lost_ad():
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
@@ -275,12 +309,13 @@ def create_lost_ad():
             data.get("longitude"),
             data.get("photo_data"),
         ),
+        duplicate_table="lost_ads",
     )
     return jsonify(to_json(row)), 201
 
 
 @app.delete("/api/lost_ads/<int:ad_id>")
-@limiter.limit("30 per minute")
+@limiter.limit("5 per minute")
 def delete_lost_ad(ad_id):
     row = db("DELETE FROM lost_ads WHERE id = %s RETURNING id", (ad_id,))
     if row is None:
@@ -306,6 +341,17 @@ def health():
 @app.errorhandler(psycopg.IntegrityError)
 def invalid_database_input(error):
     return jsonify({"error": "Некорректные данные"}), 400
+
+
+@app.errorhandler(DuplicateRecord)
+def duplicate_record(error):
+    return jsonify({"error": "Такая запись уже существует", "existing_id": error.record_id}), 409
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def request_too_large(error):
+    message = error.description if error.description == "Фото должно быть не больше 5 МБ" else "Размер запроса превышает 8 МБ (фото — до 5 МБ)"
+    return jsonify({"error": message}), 413
 
 
 @app.errorhandler(psycopg.OperationalError)
