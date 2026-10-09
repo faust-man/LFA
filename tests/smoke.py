@@ -24,7 +24,7 @@ def run(base_url):
 
     assert request("/health") == {"status": "ok", "database": "ok"}
     assert b"map" in request("/")
-    script = request("/script.js")
+    script = request("/api.js")
     assert b'const API_BASE = ""' in script
     request("/style.css")
     created = []
