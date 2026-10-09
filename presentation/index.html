@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Animal Map — презентация</title>
+    <link rel="stylesheet" href="presentation.css" />
+  </head>
+  <body>
+    <div id="stage">
+      <iframe id="slide" title="Слайд презентации"></iframe>
+      <nav aria-label="Управление презентацией">
+        <span class="brand">ANIMAL MAP <i> / </i> ПРОЕКТ</span
+        ><span id="hint">Пробел — следующий слайд</span>
+        <div id="dots"></div>
+        <button id="prev" aria-label="Предыдущий слайд">←</button
+        ><span id="counter" aria-live="polite"></span
+        ><button id="next" aria-label="Следующий слайд">→</button
+        ><button id="fullscreen" aria-label="Полный экран">⛶</button>
+      </nav>
+    </div>
+    <script src="presentation.js"></script>
+  </body>
+</html>
