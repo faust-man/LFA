@@ -20,7 +20,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем исходный код бэкенда, сразу назначая владельцем нашего изолированного пользователя
-COPY --chown=python-user:python-user app.py .
+COPY --chown=python-user:python-user app.py duplicates.py .
 
 # Переключаем контекст выполнения на непривилегированного пользователя (защита хост-системы в случае взлома)
 USER python-user
