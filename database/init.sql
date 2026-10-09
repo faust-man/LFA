@@ -103,23 +103,4 @@ CREATE INDEX IF NOT EXISTS idx_lost_ads_coords
     WHERE latitude IS NOT NULL AND longitude IS NOT NULL;
 
 
--- =====================================================================
--- Демонстрационные данные
--- =====================================================================
 
-INSERT INTO animals (name, species, color, observed_time, observed_date,
-                     latitude, longitude, behavior, state, ready, contact, address)
-SELECT 'Barsik', 'Кошка', 'серый', '12:30', '03.10.2026',
-       55.75, 37.61,
-       'Спокойный, ласковый', 'Здоров, ухожен',
-       TRUE, '+7 999 123-45-67', 'г. Москва, ул. Ленина, д. 5'
-WHERE NOT EXISTS (SELECT 1 FROM animals LIMIT 1);
-
-INSERT INTO lost_ads (nickname, character, contact, species, color,
-                      lost_time, lost_date, address, latitude, longitude)
-SELECT 'Мурка', 'Пугливая, но не агрессивная', '+7 999 000-11-22',
-       'Кошка', 'рыжая',
-       '18:00', '01.10.2026',
-       'г. Москва, ул. Тверская',
-       55.7649, 37.6055
-WHERE NOT EXISTS (SELECT 1 FROM lost_ads LIMIT 1);
