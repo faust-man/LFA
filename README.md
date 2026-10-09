@@ -122,3 +122,13 @@ python -m unittest discover -s tests -p "test_*.py"
 ```bash
 docker compose run --rm --no-deps -v "${PWD}:/workspace:ro" -w /workspace backend python -m unittest discover -s tests -p "test_*.py"
 ```
+
+Проверка координат меток в настольном и мобильном режимах (после запуска Docker Compose):
+
+```bash
+docker run --rm --network lfa_animal-net -v "${PWD}:/workspace:ro" -w /workspace node:22-alpine node tests/test_marker.cjs
+```
+
+Тест проверяет Москву, точку 0,0 и координаты в других полушариях:
+обработчик события → API → БД → отрисовка и восстановление метки.
+Все созданные тестом записи удаляются.
