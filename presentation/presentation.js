@@ -42,7 +42,7 @@ function key(event) {
     event.altKey
   )
     return;
-  // Editable placeholders and the live site's form fields keep normal text input.
+  // The live site's form fields keep normal text input.
   if (
     event.target.closest?.('input, textarea, select, [contenteditable="true"]')
   )
