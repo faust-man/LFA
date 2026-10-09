@@ -103,6 +103,7 @@ services:
 
     volumes:
       - ./frontend:/usr/share/nginx/html:ro
+      - ./presentation:/usr/share/nginx/presentation:ro
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
 
     depends_on:
