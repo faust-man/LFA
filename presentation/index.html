@@ -6,14 +6,15 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <title>Animal Map — презентация</title>
+    <title>Ищу/Нашёл животное! — презентация</title>
     <link rel="stylesheet" href="presentation.css" />
   </head>
   <body>
+    <div id="viewport">
     <div id="stage">
       <iframe id="slide" title="Слайд презентации"></iframe>
       <nav aria-label="Управление презентацией">
-        <span class="brand">ANIMAL MAP <i> / </i> ПРОЕКТ</span
+        <span class="brand">ИЩУ/НАШЁЛ ЖИВОТНОЕ! <i> / </i> ПРОЕКТ</span
         ><span id="hint">Пробел — следующий слайд</span>
         <div id="dots"></div>
         <button id="prev" aria-label="Предыдущий слайд">←</button
@@ -21,6 +22,11 @@
         ><button id="next" aria-label="Следующий слайд">→</button
         ><button id="fullscreen" aria-label="Полный экран">⛶</button>
       </nav>
+    </div>
+    </div>
+    <div class="touch-navigation" aria-label="Переключение слайдов касанием">
+      <button id="touch-prev" aria-label="Левая половина экрана — предыдущий слайд"></button>
+      <button id="touch-next" aria-label="Правая половина экрана — следующий слайд"></button>
     </div>
     <script src="presentation.js"></script>
   </body>

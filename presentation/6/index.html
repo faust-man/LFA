@@ -3,77 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>6. Animal Map</title>
+    <title>6. Ищу/Нашёл животное!</title>
     <link rel="stylesheet" href="../slides.css" />
   </head>
   <body>
-    <main class="slide">
-      <div class="eyebrow">Как работает backend</div>
-      <h2>Один запрос. Шесть понятных шагов.</h2>
-      <p class="intro">
-        Путь создания метки или объявления: от данных формы до ответа клиенту.
-      </p>
-      <div class="flow">
-        <article class="step">
-          <b>01 / ВХОД →</b>
-          <h3>Получить запрос</h3>
-          <p>Форма отправляет JSON через Nginx: фото, описание и координаты.</p>
-          <code>POST /api/animals · /api/lost_ads</code>
-        </article>
-        <article class="step">
-          <b>02 / ОГРАНИЧЕНИЕ →</b>
-          <h3>Проверить частоту</h3>
-          <p>
-            Flask-Limiter считает запросы в Redis: до 30 в минуту на endpoint и
-            IP.
-          </p>
-          <code>Превышение → 429</code>
-        </article>
-        <article class="step">
-          <b>03 / ВАЛИДАЦИЯ ↓</b>
-          <h3>Проверить данные</h3>
-          <p>
-            JSON-объект, обязательные поля, формат времени и даты, допустимые
-            координаты.
-          </p>
-          <code>Некорректные данные → 400</code>
-        </article>
-        <article class="step">
-          <b>04 / ЗАПИСЬ →</b>
-          <h3>Сохранить в PostgreSQL</h3>
-          <p>
-            psycopg выполняет параметризованный INSERT в animals или lost_ads.
-          </p>
-          <code>Транзакция · INSERT … RETURNING *</code>
-        </article>
-        <article class="step">
-          <b>05 / ОТВЕТ →</b>
-          <h3>Вернуть результат</h3>
-          <p>
-            Запись преобразуется в JSON; дата создания — в ISO-строку. Клиент
-            получает результат.
-          </p>
-          <code>Создано → 201 + JSON</code>
-        </article>
-        <article class="step last">
-          <b>06 / ОТОБРАЖЕНИЕ</b>
-          <h3>Обновить карту и список</h3>
-          <p>
-            Frontend показывает данные API. Поиск по адресу и географическая
-            фильтрация выполняются в браузере.
-          </p>
-          <code>GET /api/animals · /api/lost_ads</code>
-        </article>
+    <main class="slide live">
+      <div class="live-top">
+        <h2>06 / Фронтенд в действии</h2>
+        <span>Живой сайт · карта, метки и объявления</span
+        ><span>Пробел вне полей ввода → Backend</span>
       </div>
-      <div class="responses">
-        <span><b>404</b> запись не найдена</span
-        ><span><b>503</b> база временно недоступна</span
-        ><span><b>PATCH / DELETE</b> метки</span
-        ><span><b>DELETE</b> объявления</span>
-      </div>
-      <footer class="footer">
-        <span>ANIMAL MAP · Алгоритм API</span><span>06 / 07</span>
-      </footer>
+      <iframe
+        src="/"
+        title="Действующий сайт Ищу/Нашёл животное!"
+        allow="geolocation; fullscreen"
+      ></iframe>
     </main>
   </body>
 </html>

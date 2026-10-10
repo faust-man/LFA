@@ -6,10 +6,12 @@ const dots = document.querySelector("#dots");
 const names = [
   "Знакомство",
   "Команда",
+  "История идеи",
   "Анализ решений",
   "Инфраструктура",
   "Живой сайт",
   "Backend",
+  "Перспективы",
   "Заключение",
 ];
 let current = 1;
@@ -21,12 +23,12 @@ function resize() {
   stage.style.transform = `translate(-50%, -50%) rotate(${portrait ? 90 : 0}deg) scale(${scale})`;
 }
 function show(number) {
-  current = Math.max(1, Math.min(7, Number.isInteger(number) ? number : 1));
+  current = Math.max(1, Math.min(names.length, Number.isInteger(number) ? number : 1));
   frame.src = `${current}/`;
   frame.title = `${current}. ${names[current - 1]}`;
-  document.querySelector("#counter").textContent = `${current} / 7`;
+  document.querySelector("#counter").textContent = `${current} / ${names.length}`;
   prev.disabled = current === 1;
-  next.disabled = current === 7;
+  next.disabled = current === names.length;
   [...dots.children].forEach((dot, i) =>
     dot.setAttribute("aria-current", String(i + 1 === current)),
   );
@@ -61,7 +63,7 @@ function key(event) {
     event.preventDefault();
     event.stopImmediatePropagation();
     if (event.code === "Home") show(1);
-    else if (event.code === "End") show(7);
+    else if (event.code === "End") show(names.length);
     else
       show(
         current +
@@ -109,6 +111,8 @@ window.addEventListener("hashchange", () =>
 );
 prev.addEventListener("click", () => show(current - 1));
 next.addEventListener("click", () => show(current + 1));
+document.querySelector("#touch-prev").addEventListener("click", () => show(current - 1));
+document.querySelector("#touch-next").addEventListener("click", () => show(current + 1));
 document.querySelector("#fullscreen").addEventListener("click", async () => {
   try {
     if (document.fullscreenElement) await document.exitFullscreen();

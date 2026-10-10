@@ -3,21 +3,121 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>5. Animal Map</title>
+    <title>5. Ищу/Нашёл животное!</title>
     <link rel="stylesheet" href="../slides.css" />
   </head>
   <body>
-    <main class="slide live">
-      <div class="live-top">
-        <h2>05 / Фронтенд в действии</h2>
-        <span>Живой сайт · карта, метки и объявления</span
-        ><span>Пробел вне полей ввода → Backend</span>
+    <main class="slide">
+      <div class="eyebrow">Архитектура действующего проекта</div>
+      <h2>Как устроен проект?</h2>
+      <p class="intro">
+        Единая точка входа Nginx и изолированные сервисы в Docker Compose.
+      </p>
+      <div class="architecture">
+        <article class="node">
+          <svg class="icon" viewBox="0 0 40 40" aria-hidden="true">
+            <rect x="3" y="4" width="34" height="28" rx="4" />
+            <path d="M3 11h34M15 38h10M20 32v6" />
+          </svg>
+          <h3>Браузер</h3>
+          <p>HTML · CSS · JavaScript<br />MapLibre GL<br />Карта и формы</p>
+        </article>
+        <div class="arrow">→</div>
+        <article class="node">
+          <svg class="icon" viewBox="0 0 40 40" aria-hidden="true">
+            <rect x="5" y="3" width="30" height="14" rx="3" />
+            <rect x="5" y="23" width="30" height="14" rx="3" />
+            <path d="M11 10h1M11 30h1M22 10h7M22 30h7M20 17v6" />
+          </svg>
+          <h3>Nginx :80</h3>
+          <p>
+            Статика frontend<br />Сайт /presentation/<br />Прокси /api/*<br />Тело
+            запроса ≤ 10 МБ
+          </p>
+        </article>
+        <div class="arrow">→</div>
+        <article class="node core">
+          <svg class="icon" viewBox="0 0 40 40" aria-hidden="true">
+            <path
+              d="M20 3 35 9v12c0 9-15 17-15 17S5 30 5 21V9Z M12 20l6 6 11-12"
+            />
+          </svg>
+          <h3>Flask + Gunicorn</h3>
+          <p>
+            Python 3.12 · 2 worker<br />Проверка JSON<br />REST API · psycopg<br />/health
+            → проверка БД
+          </p>
+        </article>
+        <div class="arrow">→</div>
+        <div class="stack">
+          <article class="node">
+            <svg class="icon" viewBox="0 0 40 40" aria-hidden="true">
+              <ellipse cx="20" cy="8" rx="15" ry="5" />
+              <path d="M5 8v23c0 7 30 7 30 0V8M5 20c0 7 30 7 30 0" />
+            </svg>
+            <h3>PostgreSQL 17</h3>
+            <p>animals · lost_ads<br />Фото, координаты, контакты</p>
+          </article>
+          <article class="node">
+            <svg class="icon" viewBox="0 0 40 40" aria-hidden="true">
+              <path
+                d="M20 3 35 9v12c0 9-15 17-15 17S5 30 5 21V9Z M12 20l6 6 11-12"
+              />
+            </svg>
+            <h3>Redis 7</h3>
+            <p>Счётчики лимита запросов<br />30 / мин на endpoint и IP</p>
+          </article>
+        </div>
       </div>
-      <iframe
-        src="/"
-        title="Действующий сайт Animal Map"
-        allow="geolocation; fullscreen"
-      ></iframe>
+      <div class="network-label">
+        DOCKER NETWORK / animal-net · наружу опубликован только Nginx
+      </div>
+      <div class="infra-bottom">
+        <article class="detail">
+          <h3>
+            <svg class="icon" viewBox="0 0 40 40" aria-hidden="true">
+              <path
+                d="m3 9 11-5 12 5 11-5v28l-11 5-12-5-11 5ZM14 4v28M26 9v28"
+              />
+            </svg>
+            Внешние сервисы карты
+          </h3>
+          <p>
+            OpenFreeMap — стиль и тайлы.<br />Nominatim / OpenStreetMap — поиск
+            адресов. Браузер обращается напрямую.
+          </p>
+        </article>
+        <article class="detail">
+          <h3>
+            <svg class="icon" viewBox="0 0 40 40" aria-hidden="true">
+              <ellipse cx="20" cy="8" rx="15" ry="5" />
+              <path d="M5 8v23c0 7 30 7 30 0V8M5 20c0 7 30 7 30 0" />
+            </svg>
+            Хранение и миграции
+          </h3>
+          <p>
+            Volume postgres_data сохраняет БД.<br />migrate применяет init.sql в
+            транзакции до запуска backend.
+          </p>
+        </article>
+        <article class="detail">
+          <h3>
+            <svg class="icon" viewBox="0 0 40 40" aria-hidden="true">
+              <path
+                d="M20 3 35 9v12c0 9-15 17-15 17S5 30 5 21V9Z M12 20l6 6 11-12"
+              />
+            </svg>
+            Проверка готовности
+          </h3>
+          <p>
+            Healthcheck PostgreSQL, Redis и backend.<br />Зависимости
+            запускаются по готовности; smoke и unit-проверки — в tests/.
+          </p>
+        </article>
+      </div>
+      <footer class="footer">
+        <span></span><span>05 / 09</span>
+      </footer>
     </main>
   </body>
 </html>

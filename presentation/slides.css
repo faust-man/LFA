@@ -10,7 +10,7 @@ body {
 }
 body {
   font-family: Arial, Helvetica, sans-serif;
-  color: #183d33;
+  color: #741e17;
   background: #f4f5ed;
   -webkit-font-smoothing: antialiased;
 }
@@ -25,7 +25,7 @@ body {
   font-weight: bold;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: #527568;
+  color:#333333;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -66,7 +66,7 @@ p {
   max-width: 1100px;
 }
 .accent {
-  color: #7f9c39;
+  color: #e74c3c;
 }
 .pill {
   display: inline-block;
@@ -100,7 +100,7 @@ p {
 .school {
   margin-top: 32px;
   max-width: 650px;
-  border-bottom: 1px solid #799780;
+  border-bottom: 1px solid #3d3c3b;
   padding: 16px 0;
   font-size: 21px;
   min-height: 58px;
@@ -216,13 +216,13 @@ p {
 }
 .comparison td:nth-child(2) {
   width: 355px;
-  color: #496557;
+  color: #c15d1f;
 }
 .comparison td:last-child {
   width: 360px;
 }
 .takeaway {
-  background: #183d33;
+  background: #af2e1d;
   color: #f2f5e8;
   border-radius: 14px;
   padding: 22px 26px;
@@ -254,7 +254,7 @@ p {
   min-height: 215px;
 }
 .node.core {
-  background: #183d33;
+  background: #ad471f;
   color: #f4f5ed;
 }
 .node h3 {
@@ -280,7 +280,7 @@ p {
 .arrow {
   text-align: center;
   font-size: 28px;
-  color: #819e63;
+  color: #a93226;
 }
 .stack {
   display: grid;
@@ -334,7 +334,7 @@ p {
   align-items: center;
   justify-content: space-between;
   padding: 0 35px;
-  background: #183d33;
+  background: #8a1d15;
   color: #f2f5e8;
 }
 .live-top h2 {
@@ -344,7 +344,7 @@ p {
 }
 .live-top span {
   font-size: 16px;
-  color: #d7e4c6;
+  color: #f5ded6;
 }
 .live iframe {
   width: 1600px;
@@ -386,7 +386,7 @@ p {
   font-size: 16px;
   display: block;
   margin-top: 12px;
-  color: #416a59;
+  color: #641717;
 }
 .step.last {
   background: #dfe9cc;
@@ -396,13 +396,13 @@ p {
   gap: 22px;
   margin-top: 26px;
   font-size: 17px;
-  color: #658073;
+  color: #807365;
 }
 .responses b {
-  color: #244e3c;
+  color: #7f3719;
 }
 .closing {
-  background: #183d33;
+  background: #8a1d15;
   color: #f4f5ed;
 }
 .closing .eyebrow,
@@ -454,3 +454,20 @@ p {
   margin-top: 20px;
   color: #dce6cf;
 }
+
+.animal-gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 35px; }
+.animal-gallery figure { margin: 0; padding: 12px; background: #fff; border: 1px solid #d7e1ce; border-radius: 18px; }
+.animal-gallery img { width: 100%; height: 390px; display: block; object-fit: cover; border-radius: 11px; }
+.animal-gallery figcaption { padding: 18px 8px 8px; font-size: 16px; letter-spacing: 2px; color: #658073; }
+.perspectives { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 18px; margin: 18px -18px 0; width: calc(100% + 36px); }
+.perspectives td { width: 33.333%; height: 180px; padding: 22px 26px; vertical-align: top; border: 1px solid #d7e1ce; border-radius: 16px; background: #fff; }
+.perspectives td > span { display: block; margin-bottom: 12px; color: #83a04c; font-size: 14px; letter-spacing: 2px; }
+.perspectives h3 { font-size: 25px; margin-bottom: 10px; }
+.perspectives p { font-size: 19px; color: #698071; }
+
+.welcome h1 { font-size: 86px; letter-spacing: -4px; }
+
+.animal-gallery img { object-fit: contain; background: #eeeae4; }
+.animal-gallery figcaption { font-size: 15px; letter-spacing: 0; }
+.animal-gallery a { color: #741e17; text-decoration-color: #caa59b; text-underline-offset: 4px; }
+.photo-source { margin-top: 12px; font-size: 15px; color: #7b6b60; }

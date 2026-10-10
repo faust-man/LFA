@@ -12,13 +12,13 @@ maplibregl.prewarm();
 
 // Создание карты
 const map = new maplibregl.Map({
-    container: "map",
-    style: "https://tiles.openfreemap.org/styles/liberty",
-    center: [37.6173, 55.7558],   // Москва
-    zoom: 10,
-    minZoom: 0,
-    maxZoom: 18,
-    antialias: true
+  container: "map",
+  style: "https://tiles.openfreemap.org/styles/bright",
+  center: [37.6173, 55.7558], // Москва
+  zoom: 10,
+  minZoom: 0,
+  maxZoom: 18,
+  antialias: true,
 });
 
 maplibregl.setMaxParallelImageRequests(24);
@@ -31,11 +31,11 @@ map.scrollZoom.setZoomRate(1 / 200);
 map.addControl(new maplibregl.NavigationControl(), "top-right");
 map.addControl(new maplibregl.FullscreenControl(), "top-right");
 map.addControl(
-    new maplibregl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true
-    }),
-    "top-right"
+  new maplibregl.GeolocateControl({
+    positionOptions: { enableHighAccuracy: true },
+    trackUserLocation: true,
+  }),
+  "top-right",
 );
 
 // ПК: отключаем вращение правой кнопкой мыши
@@ -53,25 +53,28 @@ map.touchPitch.disable();
 // При отдалении метки уменьшаются, при приближении — растут,
 // но только до zoom=12. Дальше размер фиксируется.
 function updateMarkerScale() {
-    const z = map.getZoom();
+  const z = map.getZoom();
 
-    const ZOOM_START = 0;
-    const ZOOM_STOP  = 12;
+  const ZOOM_START = 0;
+  const ZOOM_STOP = 12;
 
-    const SCALE_MIN  = 0.5;
-    const SCALE_MAX  = 1.0;
+  const SCALE_MIN = 0.5;
+  const SCALE_MAX = 1.0;
 
-    let scale;
+  let scale;
 
-    if (z >= ZOOM_STOP)      scale = SCALE_MAX;
-    else if (z <= ZOOM_START) scale = SCALE_MIN;
-    else {
-        const t = (z - ZOOM_START) / (ZOOM_STOP - ZOOM_START);
-        scale = SCALE_MIN + t * (SCALE_MAX - SCALE_MIN);
-    }
+  if (z >= ZOOM_STOP) scale = SCALE_MAX;
+  else if (z <= ZOOM_START) scale = SCALE_MIN;
+  else {
+    const t = (z - ZOOM_START) / (ZOOM_STOP - ZOOM_START);
+    scale = SCALE_MIN + t * (SCALE_MAX - SCALE_MIN);
+  }
 
-    // Пишем результат в CSS-переменную --marker-scale
-    document.documentElement.style.setProperty("--marker-scale", scale.toFixed(3));
+  // Пишем результат в CSS-переменную --marker-scale
+  document.documentElement.style.setProperty(
+    "--marker-scale",
+    scale.toFixed(3),
+  );
 }
 
 map.on("zoom", updateMarkerScale);
@@ -84,39 +87,48 @@ map.on("zoom", updateMarkerScale);
 // и когда пользователь отдалится, всё отрисуется моментально.
 
 function lon2tile(lon, zoom) {
-    return Math.floor((lon + 180) / 360 * Math.pow(2, zoom));
+  return Math.floor(((lon + 180) / 360) * Math.pow(2, zoom));
 }
 
 function lat2tile(lat, zoom) {
-    return Math.floor(
-        (1 - Math.log(
-            Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)
-        ) / Math.PI) / 2 * Math.pow(2, zoom)
-    );
+  return Math.floor(
+    ((1 -
+      Math.log(
+        Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180),
+      ) /
+        Math.PI) /
+      2) *
+      Math.pow(2, zoom),
+  );
 }
 
 function preloadMoscowRegion() {
-    const bounds = { minLon: 35.0, maxLon: 40.0, minLat: 54.0, maxLat: 57.0 };
-    const zooms = [5, 6, 7, 8, 9];
-    const tileUrlTemplate = "https://tiles.openfreemap.org/planet/latest/{z}/{x}/{y}.pbf";
+  const bounds = { minLon: 35.0, maxLon: 40.0, minLat: 54.0, maxLat: 57.0 };
+  const zooms = [5, 6, 7, 8, 9];
+  const tileUrlTemplate =
+    "https://tiles.openfreemap.org/planet/latest/{z}/{x}/{y}.pbf";
 
-    let scheduled = 0;
+  let scheduled = 0;
 
-    zooms.forEach(z => {
-        const xMin = lon2tile(bounds.minLon, z);
-        const xMax = lon2tile(bounds.maxLon, z);
-        const yMin = lat2tile(bounds.maxLat, z);
-        const yMax = lat2tile(bounds.minLat, z);
+  zooms.forEach((z) => {
+    const xMin = lon2tile(bounds.minLon, z);
+    const xMax = lon2tile(bounds.maxLon, z);
+    const yMin = lat2tile(bounds.maxLat, z);
+    const yMax = lat2tile(bounds.minLat, z);
 
-        for (let x = xMin; x <= xMax; x++) {
-            for (let y = yMin; y <= yMax; y++) {
-                const url = tileUrlTemplate
-                    .replace("{z}", z).replace("{x}", x).replace("{y}", y);
-                scheduled++;
-                fetch(url, { mode: "cors" }).catch(() => {});
-            }
-        }
-    });
+    for (let x = xMin; x <= xMax; x++) {
+      for (let y = yMin; y <= yMax; y++) {
+        const url = tileUrlTemplate
+          .replace("{z}", z)
+          .replace("{x}", x)
+          .replace("{y}", y);
+        scheduled++;
+        fetch(url, { mode: "cors" }).catch(() => {});
+      }
+    }
+  });
 
-    console.log(`🔄 Предзагрузка Москвы и области запущена (${scheduled} тайлов)`);
+  console.log(
+    `🔄 Предзагрузка Москвы и области запущена (${scheduled} тайлов)`,
+  );
 }
