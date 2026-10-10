@@ -2,7 +2,6 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const { randomUUID } = require('node:crypto');
 
 const base = process.env.TEST_BASE_URL || 'http://nginx';
 const handlers = {};
@@ -43,7 +42,7 @@ for (const file of ['state.js', 'api.js', 'marker.js', 'mobile-place.js', 'main.
     try {
         for (const mode of ['desktop', 'mobile']) {
             for (const [lng, lat] of [[37.6173, 55.7558], [0, 0], [-122.4194, 37.7749], [151.2093, -33.8688]]) {
-                vm.runInContext(`placingMode = true; mobilePlacingMode = ${mode === 'mobile'}; pendingContact = ${JSON.stringify(randomUUID())};`, context);
+                vm.runInContext(`placingMode = true; mobilePlacingMode = ${mode === 'mobile'};`, context);
                 if (mode === 'desktop') await handlers.click({ lngLat: { lng, lat } });
                 else {
                     center = { lng, lat };

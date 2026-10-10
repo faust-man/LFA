@@ -182,11 +182,6 @@ photoDrop.addEventListener("click", () => photoInput.click());
 photoInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > MAX_PHOTO_BYTES) {
-        alert("Фото должно быть не больше 5 МБ");
-        photoInput.value = "";
-        return;
-    }
 
     const reader = new FileReader();
     reader.onload = (ev) => {
