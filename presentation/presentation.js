@@ -3,7 +3,8 @@ const frame = document.querySelector("#slide");
 const prev = document.querySelector("#prev");
 const next = document.querySelector("#next");
 const dots = document.querySelector("#dots");
-const presentationVersion = "20261010-2";
+const presentationVersion = "20261010-3";
+const touchNavigation = document.querySelector(".touch-navigation");
 const names = [
   "Знакомство",
   "Команда",
@@ -21,12 +22,22 @@ function resize() {
     h = window.innerHeight,
     portrait = h > w;
   const scale = Math.min((portrait ? h : w) / 1600, (portrait ? w : h) / 960);
+  document.querySelector("#touch-prev").setAttribute("aria-label", `${portrait ? "Нижняя" : "Левая"} половина экрана — предыдущий слайд`);
+  document.querySelector("#touch-next").setAttribute("aria-label", `${portrait ? "Верхняя" : "Правая"} половина экрана — следующий слайд`);
   stage.style.transform = `translate(-50%, -50%) rotate(${portrait ? 90 : 0}deg) scale(${scale})`;
+  // Keep the slide controls outside the invisible touch zones.
+  const navigationBounds = stage.querySelector("nav").getBoundingClientRect();
+  touchNavigation.style.left = portrait ? `${navigationBounds.right}px` : "0";
+  touchNavigation.style.bottom = portrait ? "0" : `${h - navigationBounds.top}px`;
 }
 function show(number) {
   current = Math.max(1, Math.min(names.length, Number.isInteger(number) ? number : 1));
   frame.src = `${current}/?v=${presentationVersion}`;
   frame.title = `${current}. ${names[current - 1]}`;
+  touchNavigation.hidden = current === 6;
+  document.querySelector("#hint").textContent = current === 6
+    ? "Переключение — кнопками панели"
+    : "Пробел — следующий слайд";
   document.querySelector("#counter").textContent = `${current} / ${names.length}`;
   prev.disabled = current === 1;
   next.disabled = current === names.length;
@@ -37,6 +48,7 @@ function show(number) {
     history.replaceState(null, "", `#${current}`);
 }
 function key(event) {
+  if (current === 6) return;
   if (
     event.defaultPrevented ||
     event.repeat ||

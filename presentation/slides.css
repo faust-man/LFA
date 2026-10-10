@@ -166,6 +166,14 @@ p {
   height: 100%;
   object-fit: cover;
 }
+.photo.kitten {
+  background-image: url("2/kittens-in-suits.png");
+  background-size: 200% 200%;
+}
+.kitten-1 { background-position: left top; }
+.kitten-2 { background-position: right top; }
+.kitten-3 { background-position: left bottom; }
+.kitten-4 { background-position: right bottom; }
 .photo span {
   position: absolute;
   bottom: 22px;

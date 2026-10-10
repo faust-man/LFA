@@ -94,10 +94,15 @@ button:disabled {
 }
 
 .touch-navigation { display: none; }
+.touch-navigation[hidden] { display: none !important; }
 @media (max-width: 1100px) and (pointer: coarse) {
   .touch-navigation { display: flex; position: fixed; inset: 0; z-index: 10; }
   .touch-navigation button { width: 50%; height: 100%; border: 0; border-radius: 0; padding: 0; margin: 0; background: transparent; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   .touch-navigation button:hover { background: transparent; outline: none; }
   .touch-navigation button:focus-visible { outline: 2px solid #bedc74; outline-offset: -2px; }
+}
+@media (max-width: 1100px) and (pointer: coarse) and (orientation: portrait) {
+  .touch-navigation { flex-direction: column-reverse; }
+  .touch-navigation button { width: 100%; height: 50%; }
 }
 #viewport { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; }
