@@ -100,11 +100,6 @@ lostPhotoDrop.addEventListener("click", () => lostPhotoInput.click());
 lostPhotoInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > MAX_PHOTO_BYTES) {
-        alert("Фото должно быть не больше 5 МБ");
-        lostPhotoInput.value = "";
-        return;
-    }
     const reader = new FileReader();
     reader.onload = (ev) => {
         lostPhoto = ev.target.result;
@@ -227,7 +222,7 @@ lostSubmitBtn.addEventListener("click", async () => {
         saved = await apiCreateLostAd(payload);
     } catch (err) {
         console.error("Не удалось сохранить объявление:", err);
-        alert(err.message || "Не удалось сохранить объявление. Проверьте соединение.");
+        alert("Не удалось сохранить объявление. Проверьте соединение.");
         return;
     }
 

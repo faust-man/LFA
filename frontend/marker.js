@@ -126,7 +126,7 @@ async function placeMarkerAt(lng, lat, animal, okras, time, date, photo, extras)
         saved = await apiCreateAnimal(payload);
     } catch (err) {
         console.error("Не удалось сохранить метку:", err);
-        alert(err.message || "Не удалось сохранить метку. Проверьте соединение.");
+        alert("Не удалось сохранить метку. Проверьте соединение.");
         return null;
     }
 
