@@ -3,6 +3,7 @@ const frame = document.querySelector("#slide");
 const prev = document.querySelector("#prev");
 const next = document.querySelector("#next");
 const dots = document.querySelector("#dots");
+const presentationVersion = "20261010-2";
 const names = [
   "Знакомство",
   "Команда",
@@ -24,7 +25,7 @@ function resize() {
 }
 function show(number) {
   current = Math.max(1, Math.min(names.length, Number.isInteger(number) ? number : 1));
-  frame.src = `${current}/`;
+  frame.src = `${current}/?v=${presentationVersion}`;
   frame.title = `${current}. ${names[current - 1]}`;
   document.querySelector("#counter").textContent = `${current} / ${names.length}`;
   prev.disabled = current === 1;
